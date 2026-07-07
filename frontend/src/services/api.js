@@ -31,3 +31,19 @@ export const guardarRespuesta = async (evaluacionId, preguntaId, nivel) => {
   if (!response.ok) throw new Error('Error al guardar respuesta');
   return response.json();
 };
+
+export const guardarResultado = async (evaluacionId, resultados) => {
+  const response = await fetch(`${API_BASE}/evaluaciones/${evaluacionId}/resultados`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(resultados),
+  });
+  if (!response.ok) throw new Error('Error al guardar resultado');
+  return response.json();
+};
+
+export const obtenerResultado = async (evaluacionId) => {
+  const response = await fetch(`${API_BASE}/evaluaciones/${evaluacionId}/resultados`);
+  if (!response.ok) throw new Error('Error al obtener resultado');
+  return response.json();
+};

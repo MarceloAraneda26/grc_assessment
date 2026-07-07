@@ -1,6 +1,7 @@
 -- Esquema MSSQL para GRC Assessment (TIBOX)
 -- Persiste el perfil del cliente y sus respuestas; el banco de preguntas vive en el frontend (contenido estático).
 
+IF OBJECT_ID('dbo.Resultados', 'U') IS NOT NULL DROP TABLE dbo.Resultados;
 IF OBJECT_ID('dbo.Respuestas', 'U') IS NOT NULL DROP TABLE dbo.Respuestas;
 IF OBJECT_ID('dbo.Evaluaciones', 'U') IS NOT NULL DROP TABLE dbo.Evaluaciones;
 IF OBJECT_ID('dbo.Clientes', 'U') IS NOT NULL DROP TABLE dbo.Clientes;
@@ -41,6 +42,26 @@ CREATE TABLE dbo.Respuestas (
     Nivel           INT             NOT NULL,
     FechaRespuesta  DATETIME2       NOT NULL DEFAULT SYSUTCDATETIME(),
     CONSTRAINT UQ_Respuestas_Evaluacion_Pregunta UNIQUE (EvaluacionId, PreguntaId)
+);
+
+CREATE TABLE dbo.Resultados (
+    Id                          INT IDENTITY(1,1) PRIMARY KEY,
+    EvaluacionId                INT             NOT NULL UNIQUE REFERENCES dbo.Evaluaciones(Id),
+    PuntajeGlobal               INT             NOT NULL,
+    Nivel                       NVARCHAR(30)    NOT NULL,
+    InventarioScore             INT             NULL,
+    AccesoIdentidadScore        INT             NULL,
+    DatosPersonalesScore        INT             NULL,
+    SeguridadPerimetralScore    INT             NULL,
+    RespaldosScore              INT             NULL,
+    MonitoreoScore              INT             NULL,
+    ProveedoresScore            INT             NULL,
+    AreaDebilUno                NVARCHAR(100)   NULL,
+    AreaDebilDos                NVARCHAR(100)   NULL,
+    AreaDebilTres               NVARCHAR(100)   NULL,
+    ResumenEjecutivo            NVARCHAR(MAX)   NULL,
+    FechaCalculo                DATETIME2       NOT NULL DEFAULT SYSUTCDATETIME(),
+    FechaActualizacion          DATETIME2       NOT NULL DEFAULT SYSUTCDATETIME()
 );
 
 PRINT 'Esquema GRC_Assessment creado correctamente';

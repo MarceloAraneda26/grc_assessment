@@ -2,6 +2,7 @@ import { getConnection } from "../database/connection.js";
 import { crearCliente } from "../services/cliente.service.js";
 import { crearEvaluacion, obtenerEvaluacionPorId, obtenerEvaluaciones } from "../services/evaluacion.service.js";
 import { upsertRespuesta, obtenerRespuestasPorEvaluacion } from "../services/respuesta.service.js";
+import { guardarResultadoEvaluacion, obtenerResultadoEvaluacion, obtenerTodosResultados, obtenerEstadisticasResultados } from "../services/resultado.service.js";
 
 const filaAPerfil = (row) => ({
   empresa: row.RazonSocial,
@@ -95,5 +96,85 @@ export const guardarRespuestaController = async (req, res) => {
   } catch (error) {
     console.error("Error al guardar respuesta:", error);
     res.status(500).json({ message: "Error al guardar respuesta" });
+  }
+};
+
+export const guardarResultadoController = async (req, res) => {
+  const { id } = req.params;
+  const datos = req.body;
+
+  if (!id) {
+    return res.status(400).json({ message: "ID de evaluación es requerido" });
+  }
+
+  if (typeof datos.puntajeGlobal !== "number") {
+    return res.status(400).json({ message: "puntajeGlobal debe ser un número" });
+  }
+
+  if (!datos.nivel) {
+    return res.status(400).json({ message: "nivel es requerido" });
+  }
+
+  try {
+    const pool = await getConnection();
+    const resultado = await guardarResultadoEvaluacion(pool, id, datos);
+    res.status(200).json({
+      message: "Resultado guardado correctamente",
+      resultado
+    });
+  } catch (error) {
+    console.error("Error al guardar resultado:", error);
+    res.status(500).json({ message: "Error al guardar resultado", error: error.message });
+  }
+};
+
+export const obtenerResultadoController = async (req, res) => {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ message: "ID de evaluación es requerido" });
+  }
+
+  try {
+    const pool = await getConnection();
+    const resultado = await obtenerResultadoEvaluacion(pool, id);
+    if (!resultado) {
+      return res.status(404).json({ message: "Resultado no encontrado" });
+    }
+    res.status(200).json(resultado);
+  } catch (error) {
+    console.error("Error al obtener resultado:", error);
+    res.status(500).json({ message: "Error al obtener resultado", error: error.message });
+  }
+};
+
+export const listarResultadosController = async (req, res) => {
+  try {
+    const pool = await getConnection();
+    const resultados = await obtenerTodosResultados(pool);
+    res.status(200).json({
+      resultados: resultados || [],
+      total: resultados?.length || 0
+    });
+  } catch (error) {
+    console.error("Error al listar resultados:", error);
+    res.status(500).json({ message: "Error al listar resultados", error: error.message });
+  }
+};
+
+export const obtenerEstadisticasController = async (req, res) => {
+  try {
+    const pool = await getConnection();
+    const estadisticas = await obtenerEstadisticasResultados(pool);
+    res.status(200).json({
+      estadisticas: estadisticas || [],
+      resumen: {
+        totalModulos: estadisticas?.length || 0,
+        totalEvaluaciones: estadisticas?.reduce((sum, e) => sum + (parseInt(e.TotalEvaluaciones) || 0), 0) || 0
+      }
+    });
+  } catch (error) {
+    console.error("Error al obtener estadísticas:", error);
+    res.status(500).json({ message: "Error al obtener estadísticas", error: error.message });
   }
 };

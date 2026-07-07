@@ -1,12 +1,14 @@
-import { useContext, useState, useMemo } from 'react';
+import { useContext, useState, useMemo, useEffect } from 'react';
 import { EvaluacionContext } from '../context/EvaluacionContext';
 import { PREGUNTAS_TI, DOMINIOS_TI } from '../data/ti-questions';
-import { calcularMadurezTI, calcularDetallesMaturezTI, getNivelMadurezTI } from '../utils/ti-scoring';
+import { calcularMadurezTI, calcularDetallesMaturezTI, getNivelMadurezTI, getAreasParaMejorar } from '../utils/ti-scoring';
+import { guardarResultado } from '../services/api';
 import '../styles/ResultadosPage.css';
 
 export const ResultadosPage = () => {
   const { evaluacion, irAFase } = useContext(EvaluacionContext);
   const [selectedDominio, setSelectedDominio] = useState(null);
+  const [guardandoResultado, setGuardandoResultado] = useState(false);
 
   const isTI = evaluacion.modulo === 'ti';
 
@@ -64,6 +66,41 @@ export const ResultadosPage = () => {
       };
     }
   }, [evaluacion.modulo, evaluacion.respuestas, selectedDominio, isTI]);
+
+  // Guardar resultados en BD cuando se carga la página
+  useEffect(() => {
+    const guardarEnBD = async () => {
+      if (!evaluacion.id || guardandoResultado) return;
+
+      try {
+        setGuardandoResultado(true);
+
+        if (isTI) {
+          const madurez = calcularMadurezTI(evaluacion.respuestas);
+          const detalles = calcularDetallesMaturezTI(evaluacion.respuestas);
+          const nivelObj = getNivelMadurezTI(madurez);
+          const areasDebiles = getAreasParaMejorar(detalles, 3);
+
+          const datosResultado = {
+            puntajeGlobal: Math.round(madurez),
+            nivel: nivelObj.label,
+            detalles: detalles,
+            areasParaMejorar: areasDebiles,
+            resumenEjecutivo: `Evaluación TI: ${nivelObj.label} (${Math.round(madurez)}%). Áreas prioritarias: ${areasDebiles.map(a => a.nombre).join(', ')}.`
+          };
+
+          await guardarResultado(evaluacion.id, datosResultado);
+          console.log('Resultado TI guardado en BD');
+        }
+      } catch (error) {
+        console.error('Error guardando resultado en BD:', error);
+      } finally {
+        setGuardandoResultado(false);
+      }
+    };
+
+    guardarEnBD();
+  }, [evaluacion.id, isTI, evaluacion.respuestas]);
 
   const calcularPorDominio = (dominio) => {
     if (isTI) {
