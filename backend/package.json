@@ -1,0 +1,29 @@
+{
+  "name": "grc-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Backend para GRC Assessment - TIBOX",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "grc",
+    "assessment",
+    "tibox"
+  ],
+  "author": "TIBOX",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "helmet": "^7.0.0",
+    "mssql": "^9.1.1",
+    "tedious": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
