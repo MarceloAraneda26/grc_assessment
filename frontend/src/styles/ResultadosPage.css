@@ -254,6 +254,28 @@
   background: var(--green);
 }
 
+/* Estilos para respuestas simples (TI) */
+.drill-item-lvl.l-Si {
+  background: var(--green);
+}
+
+.drill-item-lvl.l-No {
+  background: var(--red);
+}
+
+.drill-item-lvl.l-Parcial {
+  background: var(--blue);
+}
+
+.drill-item-lvl.l-Desconoce {
+  background: var(--text-muted);
+}
+
+.drill-item-lvl.l-Sin\ respuesta {
+  background: var(--border);
+  color: var(--text-muted);
+}
+
 .resultado-actions {
   display: flex;
   gap: 10px;

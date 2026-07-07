@@ -24,6 +24,15 @@ export const ModuloSelect = () => {
       tagBg: 'rgba(139, 92, 246, 0.12)',
       tagColor: '#8B5CF6',
     },
+    {
+      id: 'ti',
+      nombre: 'Levantamiento TI',
+      descripcion: 'Inventario y diagnóstico de infraestructura, sistemas, acceso, respaldos y seguridad',
+      icono: '🖥️',
+      tag: 'Sistemas · Infraestructura',
+      tagBg: 'rgba(16, 185, 129, 0.12)',
+      tagColor: '#10B981',
+    },
   ];
 
   return (

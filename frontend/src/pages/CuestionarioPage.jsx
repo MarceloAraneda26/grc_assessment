@@ -1,37 +1,49 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useMemo } from 'react';
 import { EvaluacionContext } from '../context/EvaluacionContext';
 import { guardarRespuesta } from '../services/api';
+import { PREGUNTAS_TI } from '../data/ti-questions';
 import '../styles/CuestionarioPage.css';
 
 export const CuestionarioPage = () => {
   const { evaluacion, guardarRespuesta: guardarRespuestaLocal, irAFase } = useContext(EvaluacionContext);
-  const [preguntas] = useState([
-    { id: 'q1', texto: '¿Tiene política de seguridad documentada?', dominio: 'Gobernanza' },
-    { id: 'q2', texto: '¿Realiza evaluaciones de riesgo regularmente?', dominio: 'Gobernanza' },
-    { id: 'q3', texto: '¿Cuenta con un equipo de seguridad dedicado?', dominio: 'Gobernanza' },
-    { id: 'q4', texto: '¿Implementa control de acceso basado en roles?', dominio: 'Acceso' },
-    { id: 'q5', texto: '¿Utiliza autenticación multifactor?', dominio: 'Acceso' },
-  ]);
-
   const [preguntaActual, setPreguntaActual] = useState(0);
   const [saving, setSaving] = useState(false);
 
+  // Cargar preguntas según el módulo
+  const preguntas = useMemo(() => {
+    if (evaluacion.modulo === 'ti') {
+      return PREGUNTAS_TI;
+    }
+    // Para cyber y ley, mantener las preguntas de demostración
+    return [
+      { id: 'q1', texto: '¿Tiene política de seguridad documentada?', dominio: 'Gobernanza' },
+      { id: 'q2', texto: '¿Realiza evaluaciones de riesgo regularmente?', dominio: 'Gobernanza' },
+      { id: 'q3', texto: '¿Cuenta con un equipo de seguridad dedicado?', dominio: 'Gobernanza' },
+      { id: 'q4', texto: '¿Implementa control de acceso basado en roles?', dominio: 'Acceso' },
+      { id: 'q5', texto: '¿Utiliza autenticación multifactor?', dominio: 'Acceso' },
+    ];
+  }, [evaluacion.modulo]);
+
   const pregunta = preguntas[preguntaActual];
-  const nivelActual = evaluacion.respuestas[pregunta.id] || undefined;
+  const respuestaActual = evaluacion.respuestas[pregunta.id] || undefined;
 
-  const dominios = [...new Set(preguntas.map(p => p.dominio))];
-  const domainsState = {};
-  dominios.forEach(d => {
-    const domsPregs = preguntas.filter(p => p.dominio === d);
-    const allAnswered = domsPregs.every(p => evaluacion.respuestas[p.id] !== undefined);
-    domainsState[d] = allAnswered;
-  });
+  const dominios = useMemo(() => [...new Set(preguntas.map(p => p.dominio))], [preguntas]);
 
-  const handleNivel = async (nivel) => {
+  const domainsState = useMemo(() => {
+    const state = {};
+    dominios.forEach(d => {
+      const domsPregs = preguntas.filter(p => p.dominio === d);
+      const allAnswered = domsPregs.every(p => evaluacion.respuestas[p.id] !== undefined);
+      state[d] = allAnswered;
+    });
+    return state;
+  }, [dominios, preguntas, evaluacion.respuestas]);
+
+  const handleRespuesta = async (valor) => {
     setSaving(true);
     try {
-      await guardarRespuesta(evaluacion.id, pregunta.id, nivel);
-      guardarRespuestaLocal(pregunta.id, nivel);
+      await guardarRespuesta(evaluacion.id, pregunta.id, valor);
+      guardarRespuestaLocal(pregunta.id, valor);
 
       if (preguntaActual < preguntas.length - 1) {
         setPreguntaActual(preguntaActual + 1);
@@ -50,7 +62,17 @@ export const CuestionarioPage = () => {
     if (idx !== -1) setPreguntaActual(idx);
   };
 
-  const levelLabels = ['No Implementado', 'Inicial', 'Avanzado', 'Optimizado'];
+  // Determinar opciones según tipo de pregunta
+  const getOpciones = () => {
+    const tipo = pregunta.tipo || 'si-no';
+    if (tipo === 'si-no') return ['Si', 'No'];
+    if (tipo === 'si-no-parcial') return ['Si', 'Parcial', 'No'];
+    if (tipo === 'si-no-desconoce') return ['Si', 'No', 'Desconoce'];
+    return [0, 1, 2, 3]; // Para cyber y ley
+  };
+
+  const opciones = getOpciones();
+  const esRespuestaSimple = typeof opciones[0] === 'string';
 
   return (
     <div className="page">
@@ -80,22 +102,41 @@ export const CuestionarioPage = () => {
       </div>
 
       <div className="wizard-card">
-        <div className="wizard-levels">NIVEL DE MADUREZ</div>
+        <div className="wizard-levels">{pregunta.dominio}</div>
         <h2 className="wizard-qtxt">{pregunta.texto}</h2>
 
-        <div className="wizard-opts">
-          {[0, 1, 2, 3].map(nivel => (
-            <button
-              key={nivel}
-              className={`wizard-opt s${nivel} ${nivelActual === nivel ? 'selected' : ''}`}
-              onClick={() => handleNivel(nivel)}
-              disabled={saving}
-            >
-              <div className="wizard-opt-lv">{levelLabels[nivel]}</div>
-              <div className="wizard-opt-tx">Nivel {nivel}</div>
-            </button>
-          ))}
-        </div>
+        {esRespuestaSimple ? (
+          // Para preguntas Si/No/Parcial/Desconoce
+          <div className="wizard-opts-simple">
+            {opciones.map(opt => (
+              <button
+                key={opt}
+                className={`wizard-opt-simple ${respuestaActual === opt ? 'selected' : ''}`}
+                onClick={() => handleRespuesta(opt)}
+                disabled={saving}
+              >
+                {opt}
+              </button>
+            ))}
+          </div>
+        ) : (
+          // Para preguntas de nivel 0-3 (cyber y ley)
+          <div className="wizard-opts">
+            {opciones.map(nivel => (
+              <button
+                key={nivel}
+                className={`wizard-opt s${nivel} ${respuestaActual === nivel ? 'selected' : ''}`}
+                onClick={() => handleRespuesta(nivel)}
+                disabled={saving}
+              >
+                <div className="wizard-opt-lv">
+                  {nivel === 0 ? 'No Impl.' : nivel === 1 ? 'Inicial' : nivel === 2 ? 'Avanzado' : 'Optimizado'}
+                </div>
+                <div className="wizard-opt-tx">Nivel {nivel}</div>
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="wizard-actions">
           {preguntaActual === preguntas.length - 1 && (

@@ -1,44 +1,99 @@
-import { useContext, useState } from 'react';
+import { useContext, useState, useMemo } from 'react';
 import { EvaluacionContext } from '../context/EvaluacionContext';
+import { PREGUNTAS_TI, DOMINIOS_TI } from '../data/ti-questions';
+import { calcularMadurezTI, calcularDetallesMaturezTI, getNivelMadurezTI } from '../utils/ti-scoring';
 import '../styles/ResultadosPage.css';
 
 export const ResultadosPage = () => {
   const { evaluacion, irAFase } = useContext(EvaluacionContext);
   const [selectedDominio, setSelectedDominio] = useState(null);
 
-  const allQuestions = [
-    { id: 'q1', texto: '¿Tiene política de seguridad documentada?', dominio: 'Gobernanza' },
-    { id: 'q2', texto: '¿Realiza evaluaciones de riesgo regularmente?', dominio: 'Gobernanza' },
-    { id: 'q3', texto: '¿Cuenta con un equipo de seguridad dedicado?', dominio: 'Gobernanza' },
-    { id: 'q4', texto: '¿Implementa control de acceso basado en roles?', dominio: 'Acceso' },
-    { id: 'q5', texto: '¿Utiliza autenticación multifactor?', dominio: 'Acceso' },
-  ];
+  const isTI = evaluacion.modulo === 'ti';
 
-  const calcularPromedio = () => {
-    const respuestas = Object.values(evaluacion.respuestas);
-    if (respuestas.length === 0) return 0;
-    return Math.round((respuestas.reduce((a, b) => a + b, 0) / respuestas.length / 3) * 100);
-  };
+  // Datos según el módulo
+  const { allQuestions, dominios, promedio, nivel, drillDominio, drillPreguntas } = useMemo(() => {
+    if (isTI) {
+      const madurez = calcularMadurezTI(evaluacion.respuestas);
+      const detalles = calcularDetallesMaturezTI(evaluacion.respuestas);
+      const nivelTI = getNivelMadurezTI(madurez);
+
+      const domsArray = DOMINIOS_TI.map(d => d.nombre);
+      const selected = selectedDominio || (domsArray.length > 0 ? domsArray[0] : null);
+      const drillQs = PREGUNTAS_TI.filter(q => q.dominio === selected);
+
+      return {
+        allQuestions: PREGUNTAS_TI,
+        dominios: domsArray,
+        promedio: madurez,
+        nivel: nivelTI,
+        detalles,
+        drillDominio: selected,
+        drillPreguntas: drillQs
+      };
+    } else {
+      // Para cyber y ley: cálculo simple basado en niveles 0-3
+      const allQs = [
+        { id: 'q1', texto: '¿Tiene política de seguridad documentada?', dominio: 'Gobernanza' },
+        { id: 'q2', texto: '¿Realiza evaluaciones de riesgo regularmente?', dominio: 'Gobernanza' },
+        { id: 'q3', texto: '¿Cuenta con un equipo de seguridad dedicado?', dominio: 'Gobernanza' },
+        { id: 'q4', texto: '¿Implementa control de acceso basado en roles?', dominio: 'Acceso' },
+        { id: 'q5', texto: '¿Utiliza autenticación multifactor?', dominio: 'Acceso' },
+      ];
+
+      const respuestas = Object.values(evaluacion.respuestas);
+      const prom = respuestas.length === 0 ? 0 : Math.round((respuestas.reduce((a, b) => a + b, 0) / respuestas.length / 3) * 100);
+
+      const getNivelCyber = (porcentaje) => {
+        if (porcentaje < 25) return { label: 'Crítico', color: '#EF4444', dot: '#EF4444' };
+        if (porcentaje < 50) return { label: 'En Riesgo', color: '#F59E0B', dot: '#F59E0B' };
+        if (porcentaje < 75) return { label: 'Satisfactorio', color: '#0BA5EC', dot: '#0BA5EC' };
+        return { label: 'Optimizado', color: '#10B981', dot: '#10B981' };
+      };
+
+      const domsArray = [...new Set(allQs.map(q => q.dominio))];
+      const selected = selectedDominio || (domsArray.length > 0 ? domsArray[0] : null);
+      const drillQs = allQs.filter(q => q.dominio === selected);
+
+      return {
+        allQuestions: allQs,
+        dominios: domsArray,
+        promedio: prom,
+        nivel: getNivelCyber(prom),
+        drillDominio: selected,
+        drillPreguntas: drillQs
+      };
+    }
+  }, [evaluacion.modulo, evaluacion.respuestas, selectedDominio, isTI]);
 
   const calcularPorDominio = (dominio) => {
-    const domsPregs = allQuestions.filter(q => q.dominio === dominio);
-    if (domsPregs.length === 0) return 0;
-    const suma = domsPregs.reduce((acc, q) => acc + (evaluacion.respuestas[q.id] || 0), 0);
-    return Math.round((suma / (domsPregs.length * 3)) * 100);
-  };
+    if (isTI) {
+      const preg = PREGUNTAS_TI.filter(q => q.dominio === dominio);
+      if (preg.length === 0) return 0;
 
-  const getNivel = (porcentaje) => {
-    if (porcentaje < 25) return { label: 'Crítico', color: '#EF4444', dot: '#EF4444' };
-    if (porcentaje < 50) return { label: 'En Riesgo', color: '#F59E0B', dot: '#F59E0B' };
-    if (porcentaje < 75) return { label: 'Satisfactorio', color: '#0BA5EC', dot: '#0BA5EC' };
-    return { label: 'Optimizado', color: '#10B981', dot: '#10B981' };
+      // Calcular promedio de respuestas para este dominio
+      const scores = preg.map(p => {
+        const resp = evaluacion.respuestas[p.id] || 'No';
+        const esInversa = ['ti-id-3', 'ti-id-7', 'ti-mon-4'].includes(p.id);
+        if (esInversa) {
+          if (resp === 'Si') return 0;
+          if (resp === 'No') return 100;
+          if (resp === 'Parcial') return 50;
+          return 0;
+        } else {
+          if (resp === 'Si') return 100;
+          if (resp === 'No') return 0;
+          if (resp === 'Parcial') return 50;
+          return 0;
+        }
+      });
+      return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    } else {
+      const domsPregs = allQuestions.filter(q => q.dominio === dominio);
+      if (domsPregs.length === 0) return 0;
+      const suma = domsPregs.reduce((acc, q) => acc + (evaluacion.respuestas[q.id] || 0), 0);
+      return Math.round((suma / (domsPregs.length * 3)) * 100);
+    }
   };
-
-  const promedio = calcularPromedio();
-  const nivel = getNivel(promedio);
-  const dominios = [...new Set(allQuestions.map(q => q.dominio))];
-  const drillDominio = selectedDominio || (dominios.length > 0 ? dominios[0] : null);
-  const drillPreguntas = allQuestions.filter(q => q.dominio === drillDominio);
 
   const SVGGauge = ({ valor }) => {
     const radius = 70;
@@ -72,7 +127,7 @@ export const ResultadosPage = () => {
     <div className="resultados-page">
       <div className="resultados-header">
         <h1>Resultados de la Evaluación</h1>
-        <p>Análisis de madurez en {evaluacion.modulo === 'ley' ? 'Protección de Datos (Ley 21.719)' : 'Ciberseguridad'}</p>
+        <p>Análisis de {isTI ? 'Levantamiento TI' : evaluacion.modulo === 'ley' ? 'Protección de Datos (Ley 21.719)' : 'Ciberseguridad'}</p>
       </div>
 
       <div className="resultado-gauge-card">
@@ -82,17 +137,17 @@ export const ResultadosPage = () => {
         <div className="resultado-gauge-text">
           <div className="resultado-score">
             <div className="resultado-score-numero">{promedio}%</div>
-            <div className="resultado-score-label">Madurez Global</div>
+            <div className="resultado-score-label">Madurez {isTI ? 'TI' : 'Global'}</div>
           </div>
           <div className="resultado-nivel">
             <div className="resultado-nivel-dot" style={{ background: nivel.dot }} />
             <div className="resultado-nivel-tx">{nivel.label}</div>
           </div>
           <div className="resultado-desc">
-            {promedio < 25 && 'Requiere intervención inmediata en procesos fundamentales'}
-            {promedio >= 25 && promedio < 50 && 'Se necesitan mejoras significativas en gobernanza y controles'}
-            {promedio >= 50 && promedio < 75 && 'Buena madurez, enfocarse en optimización y automatización'}
-            {promedio >= 75 && 'Nivel de madurez avanzado, mantener y mejorar continuamente'}
+            {promedio < 25 && (isTI ? 'Requiere intervención inmediata en infraestructura y controles' : 'Requiere intervención inmediata en procesos fundamentales')}
+            {promedio >= 25 && promedio < 50 && (isTI ? 'Se necesitan mejoras significativas en inventario y seguridad' : 'Se necesitan mejoras significativas en gobernanza y controles')}
+            {promedio >= 50 && promedio < 75 && (isTI ? 'Buena infraestructura, enfocarse en monitoreo y proveedores' : 'Buena madurez, enfocarse en optimización y automatización')}
+            {promedio >= 75 && (isTI ? 'Infraestructura optimizada, mantener y mejorar continuamente' : 'Nivel de madurez avanzado, mantener y mejorar continuamente')}
           </div>
         </div>
       </div>
@@ -128,12 +183,21 @@ export const ResultadosPage = () => {
           </div>
           <div className="drill-items">
             {drillPreguntas.map(q => {
-              const respuesta = evaluacion.respuestas[q.id] || 0;
-              const levelLabels = ['No Impl.', 'Inicial', 'Avanzado', 'Optimizado'];
+              const respuesta = evaluacion.respuestas[q.id] || 'Sin respuesta';
+              const labelMap = {
+                'Si': 'Sí',
+                'No': 'No',
+                'Parcial': 'Parcial',
+                'Desconoce': 'Desconoce',
+                0: 'No Impl.',
+                1: 'Inicial',
+                2: 'Avanzado',
+                3: 'Optimizado'
+              };
               return (
                 <div key={q.id} className="drill-item">
                   <div className="drill-item-txt">{q.texto}</div>
-                  <div className={`drill-item-lvl l${respuesta}`}>{levelLabels[respuesta]}</div>
+                  <div className={`drill-item-lvl l-${respuesta}`}>{labelMap[respuesta] || respuesta}</div>
                 </div>
               );
             })}
