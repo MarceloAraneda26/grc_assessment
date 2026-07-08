@@ -29,7 +29,7 @@ export const guardarResultadoEvaluacion = async (pool, evaluacionId, datos) => {
     let query = guardarResultadoQuery
       .replace(/@evaluacionId/g, evaluacionId)
       .replace(/@puntajeGlobal/g, Math.round(datos.puntajeGlobal))
-      .replace(/@nivel/g, `'${datos.nivel.replace(/'/g, "''")}'`)
+      .replace(/@nivel/g, `N'${datos.nivel.replace(/'/g, "''")}'`)
       .replace(/@inventarioScore/g, inventarioScore !== null ? inventarioScore : 'NULL')
       .replace(/@accesoIdentidadScore/g, accesoIdentidadScore !== null ? accesoIdentidadScore : 'NULL')
       .replace(/@datosPersonalesScore/g, datosPersonalesScore !== null ? datosPersonalesScore : 'NULL')
@@ -37,10 +37,10 @@ export const guardarResultadoEvaluacion = async (pool, evaluacionId, datos) => {
       .replace(/@respaldosScore/g, respaldosScore !== null ? respaldosScore : 'NULL')
       .replace(/@monitoreoScore/g, monitoreoScore !== null ? monitoreoScore : 'NULL')
       .replace(/@proveedoresScore/g, proveedoresScore !== null ? proveedoresScore : 'NULL')
-      .replace(/@areaDebilUno/g, areaDebilUno ? `'${areaDebilUno.replace(/'/g, "''")}'` : 'NULL')
-      .replace(/@areaDebilDos/g, areaDebilDos ? `'${areaDebilDos.replace(/'/g, "''")}'` : 'NULL')
-      .replace(/@areaDebilTres/g, areaDebilTres ? `'${areaDebilTres.replace(/'/g, "''")}'` : 'NULL')
-      .replace(/@resumenEjecutivo/g, datos.resumenEjecutivo ? `'${datos.resumenEjecutivo.replace(/'/g, "''")}'` : 'NULL');
+      .replace(/@areaDebilUno/g, areaDebilUno ? `N'${areaDebilUno.replace(/'/g, "''")}'` : 'NULL')
+      .replace(/@areaDebilDos/g, areaDebilDos ? `N'${areaDebilDos.replace(/'/g, "''")}'` : 'NULL')
+      .replace(/@areaDebilTres/g, areaDebilTres ? `N'${areaDebilTres.replace(/'/g, "''")}'` : 'NULL')
+      .replace(/@resumenEjecutivo/g, datos.resumenEjecutivo ? `N'${datos.resumenEjecutivo.replace(/'/g, "''")}'` : 'NULL');
 
     const result = await pool.request().query(query);
 

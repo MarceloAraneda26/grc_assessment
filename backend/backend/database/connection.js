@@ -19,15 +19,22 @@ export const getConnection = async () => {
           const outFile = join(tmpdir(), `output_${Date.now()}.txt`);
 
           try {
-            writeFileSync(sqlFile, sql);
+            // El BOM UTF-8 es necesario: sin él, sqlcmd ignora "-f 65001"
+            // para el archivo de entrada y lo interpreta con la codepage del
+            // sistema, corrompiendo tildes/ñ (confirmado empíricamente).
+            writeFileSync(sqlFile, '﻿' + sql, 'utf8');
 
-            // Construye el comando PowerShell directamente
+            // Construye el comando PowerShell directamente.
+            // sqlcmd escribe con -o directo al archivo (codepage 65001 = UTF-8)
+            // en vez de canalizar por "| Out-File": pasar por el pipeline de
+            // PowerShell re-decodifica/re-codifica el stream del proceso hijo
+            // y corrompe tildes/ñ incluso con [Console]::OutputEncoding forzado.
             const psCommand = `
               $sqlcmdPath = "C:\\Program Files\\Microsoft SQL Server\\Client SDK\\ODBC\\170\\Tools\\Binn\\sqlcmd.exe"
               if (-not (Test-Path $sqlcmdPath)) {
                 $sqlcmdPath = "C:\\Program Files (x86)\\Microsoft SQL Server\\Client SDK\\ODBC\\170\\Tools\\Binn\\sqlcmd.exe"
               }
-              & $sqlcmdPath -S "(local)\\SQLEXPRESS" -d ${DB_DATABASE} -i "${sqlFile}" -s "," | Out-File -Encoding ASCII -FilePath "${outFile}"
+              & $sqlcmdPath -S "(local)\\SQLEXPRESS" -d ${DB_DATABASE} -i "${sqlFile}" -s "," -f 65001 -o "${outFile}"
             `.trim();
 
             const ps = spawn('powershell.exe', [

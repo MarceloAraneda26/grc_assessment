@@ -5,7 +5,7 @@ export const upsertRespuesta = async (pool, evaluacionId, preguntaId, nivel) => 
   try {
     let query = upsertRespuestaQuery
       .replace(/@evaluacionId/g, evaluacionId)
-      .replace(/@preguntaId/g, `'${preguntaId.replace(/'/g, "''")}'`)
+      .replace(/@preguntaId/g, `N'${preguntaId.replace(/'/g, "''")}'`)
       .replace(/@nivel/g, nivel);
 
     await pool.request().query(query);

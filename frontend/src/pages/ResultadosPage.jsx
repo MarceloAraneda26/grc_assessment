@@ -67,7 +67,7 @@ export const ResultadosPage = () => {
 
     return (
       <svg className="gauge-svg" viewBox="0 0 180 180">
-        <circle cx="90" cy="90" r={radius} fill="none" stroke="var(--surface-2)" strokeWidth="12" />
+        <circle cx="90" cy="90" r={radius} fill="none" stroke="var(--surface-3)" strokeWidth="12" />
         <circle
           cx="90"
           cy="90"

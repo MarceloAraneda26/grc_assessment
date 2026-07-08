@@ -5,18 +5,18 @@ export const crearCliente = async (pool, perfil) => {
     let insertQuery = `INSERT INTO Clientes
       (RazonSocial, Industria, Usuarios, Anci, Infraestructura, EcosistemaMs, Gestion, Incidentes, ContactoNombre, ContactoCargo, ContactoEmail, ContactoTelefono)
       VALUES (
-        '${perfil.empresa.replace(/'/g, "''")}',
-        '${perfil.industria.replace(/'/g, "''")}',
+        N'${perfil.empresa.replace(/'/g, "''")}',
+        N'${perfil.industria.replace(/'/g, "''")}',
         ${perfil.usuarios || 0},
-        '${(perfil.anci || 'general').replace(/'/g, "''")}',
-        '${(perfil.infra || 'onpremise').replace(/'/g, "''")}',
-        '${(perfil.ms || 'no').replace(/'/g, "''")}',
-        '${(perfil.gestion || 'nadie').replace(/'/g, "''")}',
-        '${(perfil.incidentes || 'no').replace(/'/g, "''")}',
-        ${perfil.nombre ? `'${perfil.nombre.replace(/'/g, "''")}'` : 'NULL'},
-        ${perfil.cargo ? `'${perfil.cargo.replace(/'/g, "''")}'` : 'NULL'},
-        ${perfil.email ? `'${perfil.email.replace(/'/g, "''")}'` : 'NULL'},
-        ${perfil.tel ? `'${perfil.tel.replace(/'/g, "''")}'` : 'NULL'}
+        N'${(perfil.anci || 'general').replace(/'/g, "''")}',
+        N'${(perfil.infra || 'onpremise').replace(/'/g, "''")}',
+        N'${(perfil.ms || 'no').replace(/'/g, "''")}',
+        N'${(perfil.gestion || 'nadie').replace(/'/g, "''")}',
+        N'${(perfil.incidentes || 'no').replace(/'/g, "''")}',
+        ${perfil.nombre ? `N'${perfil.nombre.replace(/'/g, "''")}'` : 'NULL'},
+        ${perfil.cargo ? `N'${perfil.cargo.replace(/'/g, "''")}'` : 'NULL'},
+        ${perfil.email ? `N'${perfil.email.replace(/'/g, "''")}'` : 'NULL'},
+        ${perfil.tel ? `N'${perfil.tel.replace(/'/g, "''")}'` : 'NULL'}
       ); SELECT @@IDENTITY AS Id;`;
 
     const result = await pool.request().query(insertQuery);

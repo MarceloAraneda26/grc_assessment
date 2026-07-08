@@ -176,6 +176,36 @@
   padding: 0 2px;
 }
 
+/* Responsive: el topbar no tenía breakpoints y forzaba overflow horizontal
+   en toda la app en mobile. Los breadcrumbs se ocultan porque cada página ya
+   tiene su propia navegación (botones "Anterior"/"Volver"/CTA principal). */
+@media (max-width: 640px) {
+  .topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 8px 12px;
+    row-gap: 6px;
+  }
+
+  .topbar-center {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: flex-start;
+  }
+
+  .profile-pill {
+    max-width: 100%;
+  }
+
+  .steps {
+    display: none;
+  }
+
+  .topbar-right > .divider:last-of-type {
+    display: none;
+  }
+}
+
 /* Dark mode */
 body.dark .logo-icon {
   -webkit-text-fill-color: unset;

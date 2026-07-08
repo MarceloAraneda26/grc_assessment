@@ -164,7 +164,7 @@ export const PerfilForm = () => {
   return (
     <div className="page">
       <div className="page-header">
-        <h1>Perfil del Cliente — {evaluacion.modulo === 'ley' ? 'Ley 21.719' : 'Ciberseguridad'}</h1>
+        <h1>Perfil del Cliente — {evaluacion.modulo === 'ley' ? 'Ley 21.719' : evaluacion.modulo === 'ti' ? 'Levantamiento TI' : 'Ciberseguridad'}</h1>
         <p>Complete junto al cliente</p>
       </div>
 

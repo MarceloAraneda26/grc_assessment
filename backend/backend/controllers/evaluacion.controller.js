@@ -200,7 +200,7 @@ export const buscarEvaluacionesPorRazonSocialController = async (req, res) => {
     let query = `SELECT e.Id, e.Modulo, e.Completada, e.FechaInicio, e.FechaActualizacion, c.RazonSocial
       FROM Evaluaciones e
       JOIN Clientes c ON e.ClienteId = c.Id
-      WHERE c.RazonSocial = '${razonSocial.replace(/'/g, "''")}'
+      WHERE c.RazonSocial = N'${razonSocial.replace(/'/g, "''")}'
       ORDER BY e.FechaActualizacion DESC`;
 
     const result = await pool.request().query(query);
@@ -228,7 +228,7 @@ export const verificarRazonSocialController = async (req, res) => {
   try {
     const pool = await getConnection();
 
-    let query = `SELECT COUNT(*) AS total FROM Clientes WHERE RazonSocial = '${razonSocial.replace(/'/g, "''")}'`;
+    let query = `SELECT COUNT(*) AS total FROM Clientes WHERE RazonSocial = N'${razonSocial.replace(/'/g, "''")}'`;
     const result = await pool.request().query(query);
     const existe = result.recordset[0]?.total > 0;
 
