@@ -1,12 +1,14 @@
 import { useContext, useState } from 'react';
 import { EvaluacionContext } from '../context/EvaluacionContext';
-import { crearEvaluacion } from '../services/api';
+import { crearEvaluacion, buscarEvaluacionesPorEmail, obtenerEvaluacion } from '../services/api';
 import '../styles/PerfilForm.css';
 
 export const PerfilForm = () => {
   const { evaluacion, guardarPerfil, guardarEvaluacionId, irAFase } = useContext(EvaluacionContext);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showHistorial, setShowHistorial] = useState(false);
+  const [historial, setHistorial] = useState(null);
   const [perfil, setPerfil] = useState(evaluacion.perfil || {
     empresa: '',
     industria: '',
@@ -42,6 +44,48 @@ export const PerfilForm = () => {
     if (!perfil.email?.trim()) return 'Email es requerido';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(perfil.email)) return 'Email válido es requerido';
     return '';
+  };
+
+  const handleBuscarHistorial = async () => {
+    if (!perfil.email?.trim()) {
+      setError('Ingresa tu email para buscar evaluaciones anteriores');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const resultado = await buscarEvaluacionesPorEmail(perfil.email);
+      setHistorial(resultado.evaluaciones || []);
+      setShowHistorial(true);
+      if (resultado.total === 0) {
+        setError('No hay evaluaciones anteriores para este email');
+      }
+    } catch (err) {
+      setError('Error al buscar evaluaciones: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReanudarEvaluacion = async (evalId) => {
+    setLoading(true);
+    try {
+      const response = await obtenerEvaluacion(evalId);
+      guardarEvaluacionId(response.id);
+      guardarPerfil(response.perfil);
+
+      // Cargar respuestas anteriores
+      const respuestas = response.respuestas;
+      Object.entries(respuestas).forEach(([preguntaId, nivel]) => {
+        // Aquí podrías cargar las respuestas en el contexto si es necesario
+      });
+
+      irAFase(2);
+    } catch (err) {
+      setError('Error al reanudar evaluación: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -198,6 +242,71 @@ export const PerfilForm = () => {
               <label>Teléfono</label>
               <input type="tel" name="tel" value={perfil.tel || ''} onChange={handleChange} placeholder="+56 9 ..." />
             </div>
+          </div>
+
+          {/* Retomar Evaluación Anterior */}
+          <div style={{ marginTop: '20px', padding: '15px', backgroundColor: 'var(--surface-2)', borderRadius: '8px' }}>
+            <button
+              type="button"
+              onClick={handleBuscarHistorial}
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '10px',
+                backgroundColor: 'var(--blue)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: '600'
+              }}
+            >
+              🔄 Buscar Evaluación Anterior
+            </button>
+
+            {showHistorial && historial && historial.length > 0 && (
+              <div style={{ marginTop: '15px' }}>
+                <p style={{ margin: '0 0 10px 0', fontSize: '0.9rem', fontWeight: '600' }}>Evaluaciones encontradas:</p>
+                {historial.map((eval_) => (
+                  <div
+                    key={eval_.Id}
+                    style={{
+                      padding: '10px',
+                      marginBottom: '8px',
+                      backgroundColor: 'var(--surface)',
+                      borderRadius: '6px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      fontSize: '0.9rem'
+                    }}
+                  >
+                    <div>
+                      <strong>{eval_.RazonSocial}</strong> ({eval_.Modulo})<br />
+                      <small style={{ color: 'var(--text-muted)' }}>
+                        {eval_.Completada ? '✅ Completada' : '⏳ Incompleta'} - {new Date(eval_.FechaActualizacion).toLocaleDateString()}
+                      </small>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleReanudarEvaluacion(eval_.Id)}
+                      disabled={loading}
+                      style={{
+                        padding: '8px 12px',
+                        backgroundColor: 'var(--orange)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem'
+                      }}
+                    >
+                      Reanudar
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Preguntas Preliminares Ley 21.719 */}

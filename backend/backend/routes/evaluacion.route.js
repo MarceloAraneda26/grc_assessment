@@ -7,7 +7,8 @@ import {
   guardarResultadoController,
   obtenerResultadoController,
   listarResultadosController,
-  obtenerEstadisticasController
+  obtenerEstadisticasController,
+  buscarEvaluacionesPorEmailController
 } from "../controllers/evaluacion.controller.js";
 
 const router = Router();
@@ -23,5 +24,8 @@ router.post("/evaluaciones/:id/resultados", guardarResultadoController);
 router.get("/evaluaciones/:id/resultados", obtenerResultadoController);
 router.get("/resultados", listarResultadosController);
 router.get("/resultados/estadisticas/por-modulo", obtenerEstadisticasController);
+
+// Búsqueda y reanudación
+router.get("/buscar-evaluaciones", buscarEvaluacionesPorEmailController);
 
 export default router;

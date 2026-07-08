@@ -42,7 +42,29 @@ export const CuestionarioPage = () => {
   const handleRespuesta = async (valor) => {
     setSaving(true);
     try {
-      await guardarRespuesta(evaluacion.id, pregunta.id, valor);
+      if (!evaluacion.id) {
+        throw new Error('ID de evaluación no está disponible');
+      }
+
+      // Mapear respuestas string a números para el backend
+      const mapeoRespuestas = {
+        'Si': 3,
+        'Parcial': 2,
+        'No': 1,
+        'Desconoce': 0
+      };
+
+      const nivelNumerico = typeof valor === 'string' ? (mapeoRespuestas[valor] || 0) : valor;
+      const numeroPregunta = preguntaActual + 1;
+
+      console.log(`🔹 Guardando Respuesta ${numeroPregunta}/${preguntas.length}:`, {
+        preguntaId: pregunta.id,
+        texto: pregunta.texto.substring(0, 50) + '...',
+        valor,
+        nivelNumerico
+      });
+
+      await guardarRespuesta(evaluacion.id, pregunta.id, nivelNumerico);
       guardarRespuestaLocal(pregunta.id, valor);
 
       if (preguntaActual < preguntas.length - 1) {
@@ -51,7 +73,8 @@ export const CuestionarioPage = () => {
         irAFase(3);
       }
     } catch (error) {
-      alert('Error al guardar respuesta');
+      console.error('Error:', error);
+      alert('Error al guardar respuesta: ' + error.message);
     } finally {
       setSaving(false);
     }
@@ -105,37 +128,46 @@ export const CuestionarioPage = () => {
         <div className="wizard-levels">{pregunta.dominio}</div>
         <h2 className="wizard-qtxt">{pregunta.texto}</h2>
 
-        {esRespuestaSimple ? (
-          // Para preguntas Si/No/Parcial/Desconoce
-          <div className="wizard-opts-simple">
-            {opciones.map(opt => (
-              <button
-                key={opt}
-                className={`wizard-opt-simple ${respuestaActual === opt ? 'selected' : ''}`}
-                onClick={() => handleRespuesta(opt)}
-                disabled={saving}
-              >
-                {opt}
-              </button>
-            ))}
+        {saving ? (
+          <div className="wizard-loading">
+            <div className="spinner" />
+            <span>Guardando y cargando siguiente pregunta...</span>
           </div>
         ) : (
-          // Para preguntas de nivel 0-3 (cyber y ley)
-          <div className="wizard-opts">
-            {opciones.map(nivel => (
-              <button
-                key={nivel}
-                className={`wizard-opt s${nivel} ${respuestaActual === nivel ? 'selected' : ''}`}
-                onClick={() => handleRespuesta(nivel)}
-                disabled={saving}
-              >
-                <div className="wizard-opt-lv">
-                  {nivel === 0 ? 'No Impl.' : nivel === 1 ? 'Inicial' : nivel === 2 ? 'Avanzado' : 'Optimizado'}
-                </div>
-                <div className="wizard-opt-tx">Nivel {nivel}</div>
-              </button>
-            ))}
-          </div>
+          <>
+            {esRespuestaSimple ? (
+              // Para preguntas Si/No/Parcial/Desconoce
+              <div className="wizard-opts-simple">
+                {opciones.map(opt => (
+                  <button
+                    key={opt}
+                    className={`wizard-opt-simple ${respuestaActual === opt ? 'selected' : ''}`}
+                    onClick={() => handleRespuesta(opt)}
+                    disabled={saving}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              // Para preguntas de nivel 0-3 (cyber y ley)
+              <div className="wizard-opts">
+                {opciones.map(nivel => (
+                  <button
+                    key={nivel}
+                    className={`wizard-opt s${nivel} ${respuestaActual === nivel ? 'selected' : ''}`}
+                    onClick={() => handleRespuesta(nivel)}
+                    disabled={saving}
+                  >
+                    <div className="wizard-opt-lv">
+                      {nivel === 0 ? 'No Impl.' : nivel === 1 ? 'Inicial' : nivel === 2 ? 'Avanzado' : 'Optimizado'}
+                    </div>
+                    <div className="wizard-opt-tx">Nivel {nivel}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
         )}
 
         <div className="wizard-actions">

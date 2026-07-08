@@ -178,3 +178,31 @@ export const obtenerEstadisticasController = async (req, res) => {
     res.status(500).json({ message: "Error al obtener estadísticas", error: error.message });
   }
 };
+
+export const buscarEvaluacionesPorEmailController = async (req, res) => {
+  const { email } = req.query;
+
+  if (!email) {
+    return res.status(400).json({ message: "Email es requerido" });
+  }
+
+  try {
+    const pool = await getConnection();
+
+    let query = `SELECT e.Id, e.Modulo, e.Completada, e.FechaInicio, e.FechaActualizacion, c.RazonSocial
+      FROM Evaluaciones e
+      JOIN Clientes c ON e.ClienteId = c.Id
+      WHERE c.ContactoEmail = '${email.replace(/'/g, "''")}'
+      ORDER BY e.FechaActualizacion DESC`;
+
+    const result = await pool.request().query(query);
+
+    res.status(200).json({
+      evaluaciones: result.recordset || [],
+      total: result.recordset?.length || 0
+    });
+  } catch (error) {
+    console.error("Error al buscar evaluaciones:", error);
+    res.status(500).json({ message: "Error al buscar evaluaciones", error: error.message });
+  }
+};

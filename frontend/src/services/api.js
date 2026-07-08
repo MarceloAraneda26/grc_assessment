@@ -47,3 +47,9 @@ export const obtenerResultado = async (evaluacionId) => {
   if (!response.ok) throw new Error('Error al obtener resultado');
   return response.json();
 };
+
+export const buscarEvaluacionesPorEmail = async (email) => {
+  const response = await fetch(`${API_BASE}/buscar-evaluaciones?email=${encodeURIComponent(email)}`);
+  if (!response.ok) throw new Error('Error al buscar evaluaciones');
+  return response.json();
+};
