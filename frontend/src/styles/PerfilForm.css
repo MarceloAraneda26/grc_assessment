@@ -26,7 +26,7 @@
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 20px;
   padding: 20px;
   box-shadow: var(--shadow);
 }
@@ -47,7 +47,7 @@
   content: '';
   width: 3px;
   height: 12px;
-  background: var(--orange);
+  background: var(--accent);
   border-radius: 2px;
 }
 
@@ -107,8 +107,8 @@
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: var(--orange);
-  box-shadow: none;
+  border-color: var(--accent-bright);
+  box-shadow: 0 0 0 3px rgba(0, 174, 239, 0.15);
 }
 
 .form-group select {
@@ -134,7 +134,7 @@
   padding: 10px 14px;
   background: var(--surface-2);
   border-radius: 8px;
-  border-left: 3px solid var(--orange);
+  border-left: 3px solid var(--accent);
 }
 
 .info-text b {

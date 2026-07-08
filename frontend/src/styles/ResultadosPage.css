@@ -24,7 +24,7 @@
 .resultado-gauge-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 20px;
   box-shadow: var(--shadow);
   padding: 28px;
   margin-bottom: 24px;
@@ -122,20 +122,20 @@
 .dominio-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 16px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .dominio-card:hover {
-  border-color: var(--text-muted);
+  border-color: var(--accent-bright);
   transform: translateY(-2px);
 }
 
 .dominio-card.active {
-  border-color: var(--orange);
-  background: var(--orange-light);
+  border-color: var(--accent);
+  background: var(--blue-light);
 }
 
 .dominio-card-header {
@@ -154,7 +154,7 @@
 .dominio-card-score {
   font-size: 1.1rem;
   font-weight: 800;
-  color: var(--orange);
+  color: var(--accent);
 }
 
 .dominio-card-bar {
@@ -168,13 +168,13 @@
 
 .dominio-card-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--orange) 0%, var(--orange) 100%);
+  background: linear-gradient(90deg, var(--blue) 0%, var(--accent-bright) 100%);
   border-radius: 3px;
   transition: width 0.3s ease;
 }
 
 .dominio-card.active .dominio-card-fill {
-  background: var(--orange);
+  background: var(--accent);
 }
 
 .dominio-card-status {
@@ -188,7 +188,7 @@
 .resultado-drill {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 20px;
   margin-bottom: 24px;
 }

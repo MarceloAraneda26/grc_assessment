@@ -8,20 +8,26 @@
   padding: 30px 16px;
 }
 
-.mod-title {
+.mod-hero {
   text-align: center;
+  background: var(--gradient-dark);
+  border-radius: 24px;
+  padding: 40px 24px;
+  width: 100%;
+  max-width: 900px;
 }
 
-.mod-title h1 {
-  font-size: 1.5rem;
+.mod-hero h1 {
+  font-size: 1.6rem;
   font-weight: 800;
   letter-spacing: -0.5px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  color: #fff;
 }
 
-.mod-title p {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
+.mod-hero p {
+  font-size: 0.85rem;
+  color: #D1D5DB;
 }
 
 .modulos-grid {
@@ -47,23 +53,23 @@
 .modulo-card {
   background: var(--surface);
   border: 2px solid var(--border);
-  border-radius: 14px;
+  border-radius: 20px;
   padding: 28px 22px;
   cursor: pointer;
   text-align: center;
   box-shadow: var(--shadow);
-  transition: transform 0.12s ease, border-color 0.15s ease;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .modulo-card:hover {
   transform: translateY(-3px);
-  border-color: var(--orange);
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+  border-color: var(--accent-bright);
+  box-shadow: 0 0 0 3px rgba(0, 174, 239, 0.15);
 }
 
 .modulo-card.active {
-  border-color: var(--orange);
-  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+  border-color: var(--accent-bright);
+  box-shadow: 0 0 0 3px rgba(0, 174, 239, 0.15);
 }
 
 .modulo-icono {

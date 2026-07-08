@@ -37,15 +37,15 @@ export const ModuloSelect = () => {
 
   return (
     <div className="modulo-select">
-      <div className="mod-title">
+      <div className="mod-hero">
         <div style={{ marginBottom: '12px' }}>
           <svg width="38" height="38" viewBox="0 0 28 28" fill="none">
-            <polygon points="14,2 26,9 14,16 2,9" fill="#F59E0B"></polygon>
-            <polygon points="2,9 14,16 14,26 2,19" fill="#0BA5EC"></polygon>
-            <polygon points="26,9 14,16 14,26 26,19" fill="#F97316"></polygon>
+            <polygon points="14,2 26,9 14,16 2,9" fill="#00AEEF"></polygon>
+            <polygon points="2,9 14,16 14,26 2,19" fill="#0884D6"></polygon>
+            <polygon points="26,9 14,16 14,26 26,19" fill="#FF7900"></polygon>
           </svg>
         </div>
-        <h1>TIBOX — GRC Assessment</h1>
+        <h1>TIBOX — <span className="gradient-text">GRC Assessment</span></h1>
         <p>Seleccione el módulo de evaluación</p>
       </div>
 

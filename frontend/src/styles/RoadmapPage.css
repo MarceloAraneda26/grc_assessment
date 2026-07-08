@@ -24,7 +24,7 @@
 .roadmap-timeline {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 20px;
   box-shadow: var(--shadow);
   padding: 28px;
   margin-bottom: 24px;
@@ -84,7 +84,7 @@
 }
 
 .timeline-task-bar.filled {
-  background: var(--orange);
+  background: var(--accent);
   border-radius: 3px;
   margin: 2px 4px;
   display: flex;
@@ -114,7 +114,7 @@
 .hito-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -124,7 +124,7 @@
 .hito-num {
   font-size: 2rem;
   font-weight: 900;
-  color: var(--orange);
+  color: var(--accent);
   letter-spacing: -1px;
 }
 
@@ -145,10 +145,10 @@
 .roadmap-resumen {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 20px;
   margin-bottom: 24px;
-  border-left: 4px solid var(--orange);
+  border-left: 4px solid var(--accent);
 }
 
 .roadmap-resumen-title {
@@ -169,7 +169,7 @@
 .roadmap-entregables {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 20px;
   margin-bottom: 24px;
 }
@@ -203,12 +203,12 @@
   flex-shrink: 0;
   width: 18px;
   height: 18px;
-  border: 2px solid var(--orange);
+  border: 2px solid var(--accent);
   border-radius: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--orange);
+  color: var(--accent);
   font-size: 0.7rem;
   font-weight: 900;
 }
@@ -221,7 +221,7 @@
 .roadmap-fases {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 20px;
   margin-bottom: 24px;
 }
@@ -244,9 +244,9 @@
 .fase-card {
   background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 14px;
-  border-left: 4px solid var(--orange);
+  border-left: 4px solid var(--accent);
 }
 
 .fase-titulo {
@@ -277,7 +277,7 @@
   content: '→';
   position: absolute;
   left: 0;
-  color: var(--orange);
+  color: var(--accent);
   font-weight: 700;
 }
 
