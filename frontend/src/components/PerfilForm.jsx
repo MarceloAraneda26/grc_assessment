@@ -43,14 +43,22 @@ export const PerfilForm = () => {
     }
   };
 
-  const validateForm = () => {
+  const validateForm = async () => {
     if (!perfil.empresa?.trim()) return 'Razón Social es requerida';
     if (!perfil.industria) return 'Industria es requerida';
     if (!perfil.usuarios || parseInt(perfil.usuarios) <= 0) return 'Número de usuarios válido es requerido';
     if (!perfil.nombre?.trim()) return 'Nombre de contacto es requerido';
     if (!perfil.email?.trim()) return 'Email es requerido';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(perfil.email)) return 'Email válido es requerido';
-    if (razonSocialExiste) return 'Esta Razón Social ya existe. Usa "Reanudar Evaluación Anterior" o cambia el nombre.';
+
+    // Verificar nuevamente antes de crear (por si acaso)
+    try {
+      const resultado = await verificarRazonSocial(perfil.empresa);
+      if (resultado.existe) return 'Esta Razón Social ya existe. Usa "Reanudar Evaluación Anterior" o cambia el nombre.';
+    } catch (err) {
+      console.warn('No se pudo verificar razón social:', err);
+    }
+
     return '';
   };
 
@@ -115,7 +123,7 @@ export const PerfilForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationError = validateForm();
+    const validationError = await validateForm();
     if (validationError) {
       setError(validationError);
       return;
@@ -384,8 +392,8 @@ export const PerfilForm = () => {
             <button type="button" className="btn btn-secondary" onClick={() => irAFase(0)}>
               ← Módulos
             </button>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Guardando...' : 'Continuar con Cuestionario →'}
+            <button type="submit" className="btn btn-primary" disabled={loading || verificandoRazonSocial || razonSocialExiste}>
+              {loading ? 'Guardando...' : verificandoRazonSocial ? 'Verificando...' : razonSocialExiste ? 'Empresa existente' : 'Continuar con Cuestionario →'}
             </button>
           </div>
         </form>
