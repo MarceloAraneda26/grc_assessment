@@ -2,6 +2,7 @@ import { useContext, useState } from 'react';
 import { EvaluacionContext } from '../context/EvaluacionContext';
 import { HistorialModal } from './HistorialModal';
 import { exportarEvaluacionExcel } from '../utils/exportarExcel';
+import { asset } from '../utils/asset';
 import '../styles/Topbar.css';
 
 const MODULO_LABELS = { cyber: 'Ciberseguridad', ley: 'Protección de Datos', ti: 'Levantamiento TI' };
@@ -78,11 +79,12 @@ export const Topbar = () => {
             gap: '8px'
           }}
         >
-          <div className="logo-icon">GRC</div>
-          <div className="logo-text">
-            <div className="logo-main">TIBOX</div>
-            <div className="logo-tag">Assessment</div>
-          </div>
+          <img
+            src={asset(darkMode ? 'images/logo_tibox_fondo_oscuro.png' : 'images/logo_tibox_fondo_claro.png')}
+            alt="TIBOX"
+            className="logo-img"
+          />
+          <div className="logo-tag">Assessment</div>
         </button>
       </div>
 

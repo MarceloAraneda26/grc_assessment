@@ -1,5 +1,6 @@
 import { useContext } from 'react';
 import { EvaluacionContext } from '../context/EvaluacionContext';
+import { asset } from '../utils/asset';
 import '../styles/ModuloSelect.css';
 
 export const ModuloSelect = () => {
@@ -10,7 +11,7 @@ export const ModuloSelect = () => {
       id: 'cyber',
       nombre: 'GRC Ciberseguridad',
       descripcion: 'Evaluación de madurez en gobernanza, identidad, datos, detección, respuesta y cumplimiento normativo',
-      icono: '🛡️',
+      icono: 'images/ciberseguridad.png',
       tag: 'NIST CSF · Ley 21.663',
       tagBg: 'rgba(11, 165, 236, 0.12)',
       tagColor: '#0BA5EC',
@@ -28,7 +29,7 @@ export const ModuloSelect = () => {
       id: 'ti',
       nombre: 'Levantamiento TI',
       descripcion: 'Inventario y diagnóstico de infraestructura, sistemas, acceso, respaldos y seguridad',
-      icono: '🖥️',
+      icono: 'images/infraestructura.png',
       tag: 'Sistemas · Infraestructura',
       tagBg: 'rgba(16, 185, 129, 0.12)',
       tagColor: '#10B981',
@@ -38,14 +39,8 @@ export const ModuloSelect = () => {
   return (
     <div className="modulo-select">
       <div className="mod-hero">
-        <div style={{ marginBottom: '12px' }}>
-          <svg width="38" height="38" viewBox="0 0 28 28" fill="none">
-            <polygon points="14,2 26,9 14,16 2,9" fill="#00AEEF"></polygon>
-            <polygon points="2,9 14,16 14,26 2,19" fill="#0884D6"></polygon>
-            <polygon points="26,9 14,16 14,26 26,19" fill="#FF7900"></polygon>
-          </svg>
-        </div>
-        <h1>TIBOX — <span className="gradient-text">GRC Assessment</span></h1>
+        <img src={asset('images/logo_tibox_fondo_oscuro.png')} alt="TIBOX" className="mod-hero-logo" />
+        <h1>GRC <span className="gradient-text">Assessment</span></h1>
         <p>Seleccione el módulo de evaluación</p>
       </div>
 
@@ -56,7 +51,9 @@ export const ModuloSelect = () => {
             className="modulo-card"
             onClick={() => iniciarEvaluacion(modulo.id)}
           >
-            <div className="modulo-icono">{modulo.icono}</div>
+            <div className="modulo-icono">
+              {modulo.icono.endsWith('.png') ? <img src={asset(modulo.icono)} alt="" /> : modulo.icono}
+            </div>
             <h2>{modulo.nombre}</h2>
             <p>{modulo.descripcion}</p>
             <div className="modulo-tag" style={{ background: modulo.tagBg, color: modulo.tagColor }}>

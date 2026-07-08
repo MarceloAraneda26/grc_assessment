@@ -23,29 +23,10 @@
   gap: 8px;
 }
 
-.logo-icon {
-  font-size: 1.1rem;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  background: linear-gradient(135deg, var(--blue), var(--accent-bright));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  min-width: 40px;
-  text-align: center;
-}
-
-.logo-text {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.logo-main {
-  font-size: 1rem;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  color: var(--text);
+.logo-img {
+  height: 22px;
+  width: auto;
+  display: block;
 }
 
 .logo-tag {
@@ -204,13 +185,4 @@
   .topbar-right > .divider:last-of-type {
     display: none;
   }
-}
-
-/* Dark mode */
-body.dark .logo-icon {
-  -webkit-text-fill-color: unset;
-  background: linear-gradient(135deg, var(--accent), var(--accent-bright));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
