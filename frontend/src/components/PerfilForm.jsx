@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react';
 import { EvaluacionContext } from '../context/EvaluacionContext';
-import { crearEvaluacion, buscarEvaluacionesPorEmail, obtenerEvaluacion } from '../services/api';
+import { crearEvaluacion, buscarEvaluacionesPorRazonSocial, obtenerEvaluacion, verificarRazonSocial } from '../services/api';
 import '../styles/PerfilForm.css';
 
 export const PerfilForm = () => {
@@ -9,6 +9,8 @@ export const PerfilForm = () => {
   const [error, setError] = useState('');
   const [showHistorial, setShowHistorial] = useState(false);
   const [historial, setHistorial] = useState(null);
+  const [razonSocialExiste, setRazonSocialExiste] = useState(false);
+  const [verificandoRazonSocial, setVerificandoRazonSocial] = useState(false);
   const [perfil, setPerfil] = useState(evaluacion.perfil || {
     empresa: '',
     industria: '',
@@ -34,6 +36,11 @@ export const PerfilForm = () => {
       [name]: type === 'checkbox' ? checked : value
     }));
     setError('');
+
+    // Verificar Razón Social en tiempo real
+    if (name === 'empresa') {
+      handleVerificarRazonSocial(value);
+    }
   };
 
   const validateForm = () => {
@@ -43,22 +50,40 @@ export const PerfilForm = () => {
     if (!perfil.nombre?.trim()) return 'Nombre de contacto es requerido';
     if (!perfil.email?.trim()) return 'Email es requerido';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(perfil.email)) return 'Email válido es requerido';
+    if (razonSocialExiste) return 'Esta Razón Social ya existe. Usa "Reanudar Evaluación Anterior" o cambia el nombre.';
     return '';
   };
 
+  const handleVerificarRazonSocial = async (razonSocial) => {
+    if (!razonSocial?.trim()) {
+      setRazonSocialExiste(false);
+      return;
+    }
+
+    setVerificandoRazonSocial(true);
+    try {
+      const resultado = await verificarRazonSocial(razonSocial);
+      setRazonSocialExiste(resultado.existe);
+    } catch (err) {
+      setRazonSocialExiste(false);
+    } finally {
+      setVerificandoRazonSocial(false);
+    }
+  };
+
   const handleBuscarHistorial = async () => {
-    if (!perfil.email?.trim()) {
-      setError('Ingresa tu email para buscar evaluaciones anteriores');
+    if (!perfil.empresa?.trim()) {
+      setError('Ingresa la Razón Social para buscar evaluaciones anteriores');
       return;
     }
 
     setLoading(true);
     try {
-      const resultado = await buscarEvaluacionesPorEmail(perfil.email);
+      const resultado = await buscarEvaluacionesPorRazonSocial(perfil.empresa);
       setHistorial(resultado.evaluaciones || []);
       setShowHistorial(true);
       if (resultado.total === 0) {
-        setError('No hay evaluaciones anteriores para este email');
+        setError('No hay evaluaciones anteriores para esta Razón Social');
       }
     } catch (err) {
       setError('Error al buscar evaluaciones: ' + err.message);
@@ -141,7 +166,11 @@ export const PerfilForm = () => {
           <div className="section-title">Identificación</div>
           <div className="form-grid">
             <div className="form-group">
-              <label>Razón Social <span className="required">*</span></label>
+              <label>
+                Razón Social <span className="required">*</span>
+                {verificandoRazonSocial && <span style={{ marginLeft: '10px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>verificando...</span>}
+                {razonSocialExiste && !verificandoRazonSocial && <span style={{ marginLeft: '10px', fontSize: '0.8rem', color: 'var(--orange)' }}>✓ Empresa existente</span>}
+              </label>
               <input type="text" name="empresa" value={perfil.empresa || ''} onChange={handleChange} placeholder="Nombre de la empresa" />
             </div>
             <div className="form-group">
@@ -245,24 +274,25 @@ export const PerfilForm = () => {
           </div>
 
           {/* Retomar Evaluación Anterior */}
-          <div style={{ marginTop: '20px', padding: '15px', backgroundColor: 'var(--surface-2)', borderRadius: '8px' }}>
-            <button
-              type="button"
-              onClick={handleBuscarHistorial}
-              disabled={loading}
-              style={{
-                width: '100%',
-                padding: '10px',
-                backgroundColor: 'var(--blue)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontWeight: '600'
-              }}
-            >
-              🔄 Buscar Evaluación Anterior
-            </button>
+          {razonSocialExiste && (
+            <div style={{ marginTop: '20px', padding: '15px', backgroundColor: 'var(--surface-2)', borderRadius: '8px' }}>
+              <button
+                type="button"
+                onClick={handleBuscarHistorial}
+                disabled={loading}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  backgroundColor: 'var(--blue)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600'
+                }}
+              >
+                🔄 Reanudar Evaluación Anterior
+              </button>
 
             {showHistorial && historial && historial.length > 0 && (
               <div style={{ marginTop: '15px' }}>
@@ -307,7 +337,8 @@ export const PerfilForm = () => {
                 ))}
               </div>
             )}
-          </div>
+            </div>
+          )}
 
           {/* Preguntas Preliminares Ley 21.719 */}
           {evaluacion.modulo === 'ley' && (

@@ -179,11 +179,11 @@ export const obtenerEstadisticasController = async (req, res) => {
   }
 };
 
-export const buscarEvaluacionesPorEmailController = async (req, res) => {
-  const { email } = req.query;
+export const buscarEvaluacionesPorRazonSocialController = async (req, res) => {
+  const { razonSocial } = req.query;
 
-  if (!email) {
-    return res.status(400).json({ message: "Email es requerido" });
+  if (!razonSocial) {
+    return res.status(400).json({ message: "Razón Social es requerida" });
   }
 
   try {
@@ -192,7 +192,7 @@ export const buscarEvaluacionesPorEmailController = async (req, res) => {
     let query = `SELECT e.Id, e.Modulo, e.Completada, e.FechaInicio, e.FechaActualizacion, c.RazonSocial
       FROM Evaluaciones e
       JOIN Clientes c ON e.ClienteId = c.Id
-      WHERE c.ContactoEmail = '${email.replace(/'/g, "''")}'
+      WHERE c.RazonSocial = '${razonSocial.replace(/'/g, "''")}'
       ORDER BY e.FechaActualizacion DESC`;
 
     const result = await pool.request().query(query);
@@ -204,5 +204,26 @@ export const buscarEvaluacionesPorEmailController = async (req, res) => {
   } catch (error) {
     console.error("Error al buscar evaluaciones:", error);
     res.status(500).json({ message: "Error al buscar evaluaciones", error: error.message });
+  }
+};
+
+export const verificarRazonSocialController = async (req, res) => {
+  const { razonSocial } = req.query;
+
+  if (!razonSocial) {
+    return res.status(400).json({ existe: false });
+  }
+
+  try {
+    const pool = await getConnection();
+
+    let query = `SELECT COUNT(*) AS total FROM Clientes WHERE RazonSocial = '${razonSocial.replace(/'/g, "''")}'`;
+    const result = await pool.request().query(query);
+    const existe = result.recordset[0]?.total > 0;
+
+    res.status(200).json({ existe });
+  } catch (error) {
+    console.error("Error al verificar razón social:", error);
+    res.status(500).json({ existe: false });
   }
 };

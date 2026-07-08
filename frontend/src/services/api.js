@@ -48,8 +48,14 @@ export const obtenerResultado = async (evaluacionId) => {
   return response.json();
 };
 
-export const buscarEvaluacionesPorEmail = async (email) => {
-  const response = await fetch(`${API_BASE}/buscar-evaluaciones?email=${encodeURIComponent(email)}`);
+export const buscarEvaluacionesPorRazonSocial = async (razonSocial) => {
+  const response = await fetch(`${API_BASE}/buscar-evaluaciones?razonSocial=${encodeURIComponent(razonSocial)}`);
   if (!response.ok) throw new Error('Error al buscar evaluaciones');
+  return response.json();
+};
+
+export const verificarRazonSocial = async (razonSocial) => {
+  const response = await fetch(`${API_BASE}/verificar-razon-social?razonSocial=${encodeURIComponent(razonSocial)}`);
+  if (!response.ok) throw new Error('Error al verificar razón social');
   return response.json();
 };

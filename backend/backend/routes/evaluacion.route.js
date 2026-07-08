@@ -8,7 +8,8 @@ import {
   obtenerResultadoController,
   listarResultadosController,
   obtenerEstadisticasController,
-  buscarEvaluacionesPorEmailController
+  buscarEvaluacionesPorRazonSocialController,
+  verificarRazonSocialController
 } from "../controllers/evaluacion.controller.js";
 
 const router = Router();
@@ -26,6 +27,7 @@ router.get("/resultados", listarResultadosController);
 router.get("/resultados/estadisticas/por-modulo", obtenerEstadisticasController);
 
 // Búsqueda y reanudación
-router.get("/buscar-evaluaciones", buscarEvaluacionesPorEmailController);
+router.get("/buscar-evaluaciones", buscarEvaluacionesPorRazonSocialController);
+router.get("/verificar-razon-social", verificarRazonSocialController);
 
 export default router;
