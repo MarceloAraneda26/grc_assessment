@@ -22,9 +22,9 @@ const filaAPerfil = (row) => ({
   cargo: row.ContactoCargo,
   email: row.ContactoEmail,
   tel: row.ContactoTelefono,
-  datosSensibles: row.DatosSensibles,
-  decisionesAuto: row.DecisionesAuto,
-  transferencia: row.Transferencia,
+  datosSensibles: esVerdadero(row.DatosSensibles) ? 'si' : 'no',
+  decisionesAuto: esVerdadero(row.DecisionesAuto) ? 'si' : 'no',
+  transferencia: esVerdadero(row.Transferencia) ? 'si' : 'no',
 });
 
 export const crearEvaluacionController = async (req, res) => {

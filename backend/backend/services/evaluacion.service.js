@@ -11,9 +11,9 @@ export const crearEvaluacion = async (pool, clienteId, perfil) => {
       VALUES (
         ${clienteId},
         '${perfil.modulo}',
-        ${perfil.datosSensibles ? 1 : 0},
-        ${perfil.decisionesAuto ? 1 : 0},
-        ${perfil.transferencia ? 1 : 0}
+        ${perfil.datosSensibles === 'si' ? 1 : 0},
+        ${perfil.decisionesAuto === 'si' ? 1 : 0},
+        ${perfil.transferencia === 'si' ? 1 : 0}
       ); SELECT @@IDENTITY AS Id;`;
 
     const result = await pool.request().query(query);
