@@ -238,19 +238,19 @@
   color: #fff;
 }
 
-.drill-item-lvl.l0 {
+.drill-item-lvl.l-0 {
   background: var(--red);
 }
 
-.drill-item-lvl.l1 {
+.drill-item-lvl.l-1 {
   background: var(--yellow);
 }
 
-.drill-item-lvl.l2 {
+.drill-item-lvl.l-2 {
   background: var(--blue);
 }
 
-.drill-item-lvl.l3 {
+.drill-item-lvl.l-3 {
   background: var(--green);
 }
 
