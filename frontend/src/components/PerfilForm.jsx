@@ -381,7 +381,7 @@ export const PerfilForm = () => {
 
           {/* Botones */}
           <div className="form-actions">
-            <button type="button" className="btn btn-secondary" onClick={() => window.location.reload()}>
+            <button type="button" className="btn btn-secondary" onClick={() => irAFase(0)}>
               ← Módulos
             </button>
             <button type="submit" className="btn btn-primary" disabled={loading}>

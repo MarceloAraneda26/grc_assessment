@@ -171,6 +171,9 @@ export const CuestionarioPage = () => {
         )}
 
         <div className="wizard-actions">
+          <button type="button" onClick={() => irAFase(1)} className="btn btn-secondary">
+            ← Perfil
+          </button>
           {preguntaActual === preguntas.length - 1 && (
             <button onClick={() => irAFase(3)} className="btn btn-primary">
               Ver Resultados →

@@ -1,5 +1,6 @@
 import { useContext } from 'react';
 import { EvaluacionProvider, EvaluacionContext } from './context/EvaluacionContext';
+import { useUrlSync } from './hooks/useUrlSync';
 import { Topbar } from './components/Topbar';
 import { ModuloSelect } from './components/ModuloSelect';
 import { PerfilForm } from './components/PerfilForm';
@@ -9,7 +10,8 @@ import { RoadmapPage } from './pages/RoadmapPage';
 import './App.css';
 
 function AppContent() {
-  const { evaluacion } = useContext(EvaluacionContext);
+  const { evaluacion, irAFase } = useContext(EvaluacionContext);
+  useUrlSync(evaluacion.fase, irAFase);
 
   return (
     <div className="app">

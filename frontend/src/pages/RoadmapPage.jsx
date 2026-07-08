@@ -168,10 +168,10 @@ export const RoadmapPage = () => {
       )}
 
       <div className="roadmap-actions">
-        <button onClick={() => window.location.reload()} className="btn btn-secondary">
-          ← Volver
+        <button onClick={() => irAFase(3)} className="btn btn-secondary">
+          ← Resultados
         </button>
-        <button onClick={reiniciar} className="btn btn-primary">
+        <button onClick={() => { if (window.confirm('¿Iniciar nueva evaluación?')) { reiniciar(); irAFase(0); window.location.hash = '#/inicio'; } }} className="btn btn-primary">
           Nueva Evaluación →
         </button>
       </div>

@@ -3,8 +3,16 @@ import { EvaluacionContext } from '../context/EvaluacionContext';
 import '../styles/Topbar.css';
 
 export const Topbar = () => {
-  const { evaluacion, reiniciar } = useContext(EvaluacionContext);
+  const { evaluacion, reiniciar, irAFase } = useContext(EvaluacionContext);
   const [darkMode, setDarkMode] = useState(false);
+
+  const handleHome = () => {
+    if (window.confirm('¿Volver al inicio? Se perderán los datos actuales.')) {
+      reiniciar();
+      irAFase(0);
+      window.location.hash = '#/inicio';
+    }
+  };
 
   const handleExport = () => {
     try {
@@ -56,13 +64,26 @@ export const Topbar = () => {
   return (
     <div className="topbar">
       <div className="topbar-left">
-        <div className="logo">
+        <button
+          className="logo"
+          onClick={handleHome}
+          title="Volver al inicio"
+          style={{
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}
+        >
           <div className="logo-icon">GRC</div>
           <div className="logo-text">
             <div className="logo-main">TIBOX</div>
             <div className="logo-tag">Assessment</div>
           </div>
-        </div>
+        </button>
       </div>
 
       <div className="topbar-center">
@@ -75,14 +96,18 @@ export const Topbar = () => {
       </div>
 
       <div className="topbar-right">
-        <button className="btn-icon" onClick={handleExport} title="Exportar">
-          ⬇ Export
-        </button>
-        <label className="btn-icon" title="Importar">
-          ⬆ Import
-          <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
-        </label>
-        <div className="divider"></div>
+        {(evaluacion.fase === 3 || evaluacion.fase === 4) && (
+          <>
+            <button className="btn-icon" onClick={handleExport} title="Exportar">
+              ⬇ Export
+            </button>
+            <label className="btn-icon" title="Importar">
+              ⬆ Import
+              <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
+            </label>
+            <div className="divider"></div>
+          </>
+        )}
         <button className="btn-icon" onClick={handleDarkMode} title="Tema oscuro">
           {darkMode ? '☀️' : '🌙'}
         </button>
