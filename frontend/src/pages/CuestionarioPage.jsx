@@ -5,13 +5,45 @@ import { PREGUNTAS_TI } from '../data/ti-questions';
 import { DOMINIOS_CYBER } from '../data/cyber-questions';
 import { DOMINIOS_LEY } from '../data/ley-questions';
 import { obtenerPreguntasAplicables, textoPregunta } from '../utils/cyber-ley-scoring';
-import '../styles/CuestionarioPage.css';
 
+// Preguntas padre: No=0, Parcial=1, Sí=2 (máximo 2 — el nivel 3 se reserva
+// a las hijas, que miden la calidad del control).
 const LABELS_PARENT = [
   { l: 0, x: 'No', sub: 'No contamos con esto' },
   { l: 1, x: 'Parcial', sub: 'Existe pero está incompleto' },
-  { l: 3, x: 'Sí', sub: 'Sí, contamos con esto' },
+  { l: 2, x: 'Sí', sub: 'Sí, contamos con esto' },
 ];
+
+const NIVEL_STYLES = {
+  0: { border: 'border-brand-red', bg: 'bg-red-light', text: 'text-brand-red' },
+  1: { border: 'border-brand-yellow', bg: 'bg-yellow-light', text: 'text-brand-yellow' },
+  2: { border: 'border-blue', bg: 'bg-blue-light', text: 'text-blue' },
+  3: { border: 'border-brand-green', bg: 'bg-green-light', text: 'text-brand-green' },
+};
+
+const optSimpleClass = (selected) => [
+  'border-2 rounded-[11px] p-4 cursor-pointer bg-surface-2 text-center font-semibold text-[0.9rem] text-text transition-all duration-200',
+  'hover:-translate-y-0.5 hover:border-text-muted disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0',
+  selected ? 'border-accent bg-blue-light text-accent' : 'border-border',
+].join(' ');
+
+// Badge de ley por pregunta (cuestionario unificado): azul=21.663,
+// verde=21.719, ámbar=Ambas.
+const LEY_BADGE = {
+  '21.663': 'bg-blue-light text-blue',
+  '21.719': 'bg-green-light text-brand-green',
+  'Ambas': 'bg-yellow-light text-brand-yellow',
+};
+const LEY_LABEL = { '21.663': 'Ley 21.663', '21.719': 'Ley 21.719', 'Ambas': 'Ley 21.663 + 21.719' };
+
+const optNivelClass = (nivel, selected) => {
+  const st = NIVEL_STYLES[nivel] ?? NIVEL_STYLES[0];
+  return [
+    'border-2 rounded-[11px] p-4 cursor-pointer text-left transition-[transform,border-color] duration-100',
+    'hover:-translate-y-0.5 hover:border-text-muted disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0',
+    selected ? `${st.border} ${st.bg}` : 'border-border bg-surface-2',
+  ].join(' ');
+};
 
 export const CuestionarioPage = () => {
   const { evaluacion, guardarRespuesta: guardarRespuestaLocal, irAFase } = useContext(EvaluacionContext);
@@ -125,20 +157,63 @@ export const CuestionarioPage = () => {
   const esRespuestaSimple = isTI && typeof opcionesTI[0] === 'string';
   const esPreguntaPadre = !isTI && evaluacion.modulo === 'ley' && pregunta.type === 'parent';
 
-  return (
-    <div className="page">
-      <div className="wizard-top">
-        <div className="wizard-domlabel">
-          DOMINIOS
-          <div className="wizard-globalpos">{preguntaActual + 1} / {preguntas.length}</div>
-        </div>
-        <div className="progrow">
-          <div className="progbar">
-            <div className="progfill" style={{ width: `${((preguntaActual + 1) / preguntas.length) * 100}%` }} />
+  // Contexto neutral de la pregunta (cuestionario): "por qué se pregunta" +
+  // "concepto clave". Solo existe en el banco unificado de Ley
+  // 21.663/21.719, no en TI ni Ciberseguridad. IMPORTANTE: nunca renderizar
+  // aquí como_ayuda_tibox ni entregable_asociado (contenido comercial) — eso
+  // va solo en Resultados/Roadmap, una vez calculado el diagnóstico, para no
+  // sesgar cómo responde el cliente.
+  const porQuePregunta = !isTI ? pregunta.por_que_se_pregunta : null;
+  const conceptoClave = !isTI ? pregunta.concepto_clave : null;
+  const hayContexto = Boolean(porQuePregunta || conceptoClave);
+  // Solo el cuerpo (sin título de contenedor): el panel lateral y el
+  // acordeón mobile envuelven esto con su propio encabezado/summary; cada
+  // bloque interno lleva su propio subtítulo.
+  const contextoCuerpo = hayContexto && (
+    <>
+      {porQuePregunta && (
+        <div>
+          <div className="flex items-center gap-1.5 mb-1.5 text-sm font-semibold text-text">
+            <span className="text-accent-bright" aria-hidden="true">ⓘ</span>
+            ¿Por qué se pregunta esto?
           </div>
-          <div className="proglab">{Math.round(((preguntaActual + 1) / preguntas.length) * 100)}%</div>
+          <p className="text-sm text-text-secondary leading-relaxed">{porQuePregunta}</p>
         </div>
-        <div className="wizard-doms">
+      )}
+      {conceptoClave && (
+        <div className={porQuePregunta ? 'mt-3 pt-3 border-t border-border' : ''}>
+          <div className="flex items-center gap-1.5 mb-1.5 text-sm font-semibold text-text">
+            <span className="text-accent-bright" aria-hidden="true">📖</span>
+            Concepto clave
+          </div>
+          <p className="text-sm text-text-secondary leading-relaxed">{conceptoClave}</p>
+        </div>
+      )}
+      {pregunta.type !== 'parent' && (dominioActual?.n || pregunta.referencia) && (
+        <div className="mt-3 pt-3 border-t border-border text-xs text-text-muted leading-relaxed">
+          {dominioActual?.n && <div>{dominioActual.n}</div>}
+          {pregunta.referencia && <div className="mt-0.5">{pregunta.referencia}</div>}
+        </div>
+      )}
+    </>
+  );
+
+  return (
+    <div className="animate-fade-in-up w-full max-w-[1280px] mx-auto px-7 pb-[60px] pt-6 min-w-0">
+      <div className="mb-3.5">
+        <div className="flex items-center gap-2 text-sm mb-2.5">
+          DOMINIOS
+          <div className="ml-auto text-[0.72rem] font-bold text-text-muted bg-surface-2 px-2.5 py-0.5 rounded-xl">
+            {preguntaActual + 1} / {preguntas.length}
+          </div>
+        </div>
+        <div className="flex items-center gap-2.5 mb-3">
+          <div className="flex-1 h-1 bg-border rounded-full overflow-hidden">
+            <div className="h-full bg-accent transition-[width] duration-300" style={{ width: `${((preguntaActual + 1) / preguntas.length) * 100}%` }} />
+          </div>
+          <div className="text-[0.7rem] text-text-muted font-semibold">{Math.round(((preguntaActual + 1) / preguntas.length) * 100)}%</div>
+        </div>
+        <div className="flex flex-wrap gap-1.5 mt-2.5">
           {dominios.map(dom => {
             const domId = isTI ? dom : dom.id;
             const domNombre = isTI ? dom : dom.n;
@@ -147,40 +222,75 @@ export const CuestionarioPage = () => {
             return (
               <button
                 key={domId}
-                className={`wizard-dom ${esActual ? 'cur' : ''} ${estado?.done ? 'done' : ''}`}
+                className={[
+                  'flex items-center gap-1 border-[1.5px] rounded-lg px-2.5 py-1 text-[0.68rem] font-semibold cursor-pointer transition-colors duration-200',
+                  esActual ? 'border-accent bg-blue-light text-accent' : estado?.done ? 'border-brand-green text-brand-green bg-surface-2' : 'border-border bg-surface-2 text-text-secondary hover:border-text',
+                ].join(' ')}
                 onClick={() => handleSelectDominio(dom)}
                 title={!isTI ? `${estado?.respondidas || 0}/${estado?.total || 0}` : undefined}
               >
                 <span>{!isTI && dom.ico ? `${dom.ico} ` : ''}{domNombre}</span>
-                {estado?.done && <span className="wizard-dom-c">✓</span>}
+                {estado?.done && <span className="font-extrabold opacity-80">✓</span>}
               </button>
             );
           })}
         </div>
       </div>
 
-      <div className="wizard-card" style={!isTI ? { borderTopColor: dominioActual?.c } : undefined}>
-        <div className="wizard-levels">
-          {isTI ? pregunta.dominio : (esPreguntaPadre ? 'PREGUNTA PADRE' : dominioActual?.n)}
+      <div className="flex gap-5 items-start max-lg:flex-col">
+      <div
+        className="flex-1 min-w-0 bg-surface border border-border rounded-[20px] shadow-[var(--shadow)] px-[26px] py-7 border-t-4 border-t-purple"
+        style={!isTI && dominioActual?.c ? { borderTopColor: dominioActual.c } : undefined}
+      >
+        <div className="flex items-center justify-between gap-2 mb-3.5">
+          <div className="text-[0.66rem] text-text-muted uppercase tracking-wide font-semibold">
+            {isTI ? pregunta.dominio : (esPreguntaPadre ? 'PREGUNTA PADRE' : dominioActual?.n)}
+          </div>
+          {!isTI && evaluacion.modulo === 'ley' && pregunta.ley && (
+            <span className={`text-[0.62rem] font-bold uppercase tracking-wide px-2.5 py-0.5 rounded-full whitespace-nowrap ${LEY_BADGE[pregunta.ley]}`}>
+              {LEY_LABEL[pregunta.ley]}
+            </span>
+          )}
         </div>
-        <h2 className="wizard-qtxt">
+        <h2 className="text-[1.3rem] font-bold leading-snug mb-2 text-text">
           {isTI ? pregunta.texto : textoPregunta(pregunta, evaluacion.perfil || {})}
         </h2>
-        {!isTI && pregunta.desc && <div className="wizard-desc">{pregunta.desc}</div>}
+        {!isTI && pregunta.desc && (
+          <div className="text-[0.8rem] text-text-secondary leading-relaxed bg-surface-2 rounded-lg px-3.5 py-2.5 mb-[22px]">
+            {pregunta.desc}
+          </div>
+        )}
+
+        {/* Contexto en mobile/tablet: acordeón colapsable bajo la pregunta,
+            con "¿por qué se pregunta esto?" y "concepto clave". En desktop
+            se muestra en el panel lateral (más abajo), así que este bloque
+            se oculta con lg:hidden. */}
+        {hayContexto && (
+          <details className="lg:hidden mb-[22px] group rounded-lg border border-border bg-surface-2 overflow-hidden">
+            <summary className="cursor-pointer list-none flex items-center justify-between gap-2 px-3.5 py-2.5 text-[0.8rem] font-semibold text-text-secondary select-none">
+              <span className="flex items-center gap-1.5">
+                <span className="text-accent-bright" aria-hidden="true">ⓘ</span>
+                Contexto de la pregunta
+              </span>
+              <span className="transition-transform duration-200 group-open:rotate-180" aria-hidden="true">▾</span>
+            </summary>
+            <div className="px-3.5 pb-3.5 pt-1">{contextoCuerpo}</div>
+          </details>
+        )}
 
         {saving ? (
-          <div className="wizard-loading">
-            <div className="spinner" />
+          <div className="flex items-center justify-center gap-3 p-5 bg-surface-2 rounded-[11px] mt-5">
+            <div className="w-5 h-5 border-[3px] border-border border-t-accent rounded-full animate-spin" />
             <span>Guardando y cargando siguiente pregunta...</span>
           </div>
         ) : isTI ? (
           <>
             {esRespuestaSimple ? (
-              <div className="wizard-opts-simple">
+              <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-3">
                 {opcionesTI.map(opt => (
                   <button
                     key={opt}
-                    className={`wizard-opt-simple ${respuestaActual === opt ? 'selected' : ''}`}
+                    className={optSimpleClass(respuestaActual === opt)}
                     onClick={() => handleRespuesta(opt)}
                     disabled={saving}
                   >
@@ -189,73 +299,87 @@ export const CuestionarioPage = () => {
                 ))}
               </div>
             ) : (
-              <div className="wizard-opts">
+              <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-3">
                 {opcionesTI.map(nivel => (
                   <button
                     key={nivel}
-                    className={`wizard-opt s${nivel} ${respuestaActual === nivel ? 'selected' : ''}`}
+                    className={optNivelClass(nivel, respuestaActual === nivel)}
                     onClick={() => handleRespuesta(nivel)}
                     disabled={saving}
                   >
-                    <div className="wizard-opt-lv">
+                    <div className={`text-[0.64rem] font-extrabold uppercase tracking-wide mb-1 ${respuestaActual === nivel ? NIVEL_STYLES[nivel].text : 'text-text-muted'}`}>
                       {nivel === 0 ? 'No Impl.' : nivel === 1 ? 'Inicial' : nivel === 2 ? 'Avanzado' : 'Optimizado'}
                     </div>
-                    <div className="wizard-opt-tx">Nivel {nivel}</div>
+                    <div className="text-[0.86rem] text-text leading-snug">Nivel {nivel}</div>
                   </button>
                 ))}
               </div>
             )}
           </>
         ) : esPreguntaPadre ? (
-          <div className="wizard-opts-simple">
+          <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-3 mb-5">
             {LABELS_PARENT.map(opt => (
               <button
                 key={opt.l}
-                className={`wizard-opt-simple ${respuestaActual === opt.l ? 'selected' : ''}`}
+                className={optSimpleClass(respuestaActual === opt.l)}
                 onClick={() => handleRespuesta(opt.l)}
                 disabled={saving}
               >
                 {opt.x}
-                <div className="wizard-opt-sub">{opt.sub}</div>
+                <div className="text-[0.68rem] text-text-muted font-medium mt-1 normal-case tracking-normal">{opt.sub}</div>
               </button>
             ))}
           </div>
         ) : (
-          <div className="wizard-opts">
+          <div className="grid grid-cols-2 max-sm:grid-cols-1 gap-3">
             {pregunta.o.map(opt => (
               <button
                 key={opt.l}
-                className={`wizard-opt s${opt.l} ${respuestaActual === opt.l ? 'selected' : ''}`}
+                className={optNivelClass(opt.l, respuestaActual === opt.l)}
                 onClick={() => handleRespuesta(opt.l)}
                 disabled={saving}
               >
-                <div className="wizard-opt-lv">Nivel {opt.l}</div>
-                <div className="wizard-opt-tx">{opt.x}</div>
+                <div className={`text-[0.64rem] font-extrabold uppercase tracking-wide mb-1 ${respuestaActual === opt.l ? NIVEL_STYLES[opt.l].text : 'text-text-muted'}`}>
+                  Nivel {opt.l}
+                </div>
+                <div className="text-[0.86rem] text-text leading-snug">{opt.x}</div>
               </button>
             ))}
           </div>
         )}
 
-        <div className="wizard-actions">
-          <button type="button" onClick={() => irAFase(1)} className="btn btn-secondary">
+        <div className="flex gap-2.5 mt-5 flex-wrap max-sm:flex-col">
+          <button type="button" onClick={() => irAFase(1)} className="btn btn-secondary max-sm:w-full max-sm:justify-center">
             ← Perfil
           </button>
           {preguntaActual > 0 && (
             <button
               type="button"
               onClick={() => setPreguntaActual(preguntaActual - 1)}
-              className="btn btn-secondary"
+              className="btn btn-secondary max-sm:w-full max-sm:justify-center"
               disabled={saving}
             >
               ← Anterior
             </button>
           )}
           {preguntaActual === preguntas.length - 1 && (
-            <button onClick={() => irAFase(3)} className="btn btn-primary">
+            <button onClick={() => irAFase(3)} className="btn btn-primary max-sm:w-full max-sm:justify-center">
               Ver Resultados →
             </button>
           )}
         </div>
+      </div>
+
+      {/* Panel lateral (solo desktop): mismo contenido que el acordeón de
+          arriba, oculto en mobile/tablet con hidden lg:block. */}
+      {hayContexto && (
+        <aside className="hidden lg:block w-80 shrink-0 sticky top-[70px] bg-surface-2 border border-border rounded-xl p-4">
+          <div className="text-[0.66rem] text-text-muted uppercase tracking-wide font-semibold mb-3">
+            Contexto de la pregunta
+          </div>
+          {contextoCuerpo}
+        </aside>
+      )}
       </div>
     </div>
   );

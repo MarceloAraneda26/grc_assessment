@@ -3,6 +3,7 @@ import { DB_DATABASE, DB_USER, DB_PASSWORD } from '../../config.js';
 import { writeFileSync, readFileSync, unlinkSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import { randomUUID } from 'crypto';
 
 let pool = null;
 
@@ -15,8 +16,12 @@ export const getConnection = async () => {
     request: () => ({
       query: (sql) =>
         new Promise((resolve, reject) => {
-          const sqlFile = join(tmpdir(), `query_${Date.now()}.sql`);
-          const outFile = join(tmpdir(), `output_${Date.now()}.txt`);
+          // Un UUID por request (no solo Date.now(), que se repite si dos
+          // requests caen en el mismo milisegundo) — evita que dos consultas
+          // concurrentes colisionen en el mismo archivo temporal.
+          const requestId = randomUUID();
+          const sqlFile = join(tmpdir(), `query_${requestId}.sql`);
+          const outFile = join(tmpdir(), `output_${requestId}.txt`);
 
           try {
             // El BOM UTF-8 es necesario: sin él, sqlcmd ignora "-f 65001"

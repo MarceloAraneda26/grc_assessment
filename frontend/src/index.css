@@ -1,7 +1,51 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@import "tailwindcss";
+
+/* Tailwind v4: variante "dark" activada por la clase .dark ya existente
+   (hoy se aplica sobre <body> desde Topbar.jsx) — cualquier elemento dentro
+   de .dark, en cualquier nivel, activa dark:. No requiere mover la clase a
+   <html> ni tocar el mecanismo de toggle actual. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tokens de marca TIBOX expuestos como colores Tailwind (bg-surface,
+   text-text-secondary, border-border, etc.). Apuntan a las variables CSS de
+   abajo, así que theming claro/oscuro se sigue resolviendo en runtime por
+   la clase .dark — Tailwind solo genera las utilidades, no fija el valor. */
+@theme {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-input-bg: var(--input-bg);
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-nav-disabled: var(--nav-disabled);
+  --color-border: var(--border);
+
+  --color-orange: var(--orange);
+  --color-orange-2: var(--orange-2);
+  --color-blue: var(--blue);
+  --color-blue-deep: var(--blue-deep);
+  --color-blue-corp: var(--blue-corp);
+  --color-accent: var(--accent);
+  --color-accent-bright: var(--accent-bright);
+  --color-brand-yellow: var(--yellow);
+  --color-brand-green: var(--green);
+  --color-brand-red: var(--red);
+  --color-brand-purple: var(--purple);
+  --color-brand-cyan: var(--cyan);
+
+  --color-red-light: var(--red-light);
+  --color-yellow-light: var(--yellow-light);
+  --color-blue-light: var(--blue-light);
+  --color-green-light: var(--green-light);
+  --color-orange-light: var(--orange-light);
+  --color-purple-light: var(--purple-light);
+
+  --animate-fade-in-up: fade-in-up 0.35s ease both;
 }
 
 :root {
@@ -17,6 +61,10 @@
   --text-muted: #94A3B8;
   --border: #D8E3EF;
   --shadow: 0 12px 30px rgba(0, 31, 78, 0.08);
+  --input-bg: #fff;
+  /* Texto "deshabilitado" en nav/cards: legible (~5:1 sobre --surface),
+     a diferencia de --text-muted que es intencionalmente tenue. */
+  --nav-disabled: #64748B;
 
   /* Brand Colors — corporate tech: deep blue/cyan identity, orange reserved for CTAs */
   --orange: #FF7900;
@@ -55,6 +103,8 @@ body.dark {
   --text-muted: #64748B;
   --border: #1E2D3D;
   --shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+  --input-bg: var(--surface-2);
+  --nav-disabled: #94A3B8;
 
   --red-light: #1A0808;
   --yellow-light: #1A1200;
@@ -62,152 +112,181 @@ body.dark {
   --green-light: #051210;
   --orange-light: #1C1108;
   --purple-light: rgba(139, 92, 246, 0.08);
+
+  /* Los alias --color-* de @theme (más abajo) solo se resuelven UNA VEZ,
+     donde se declaran (:root/:host) — el valor ya sustituido es lo que
+     heredan los descendientes, no la "fórmula" var(--surface). Por eso hay
+     que redeclararlos acá para que el modo oscuro los vuelva a resolver
+     con el --surface/--text/etc. de este bloque. */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-input-bg: var(--input-bg);
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-nav-disabled: var(--nav-disabled);
+  --color-border: var(--border);
+  --color-red-light: var(--red-light);
+  --color-yellow-light: var(--yellow-light);
+  --color-blue-light: var(--blue-light);
+  --color-green-light: var(--green-light);
+  --color-orange-light: var(--orange-light);
+  --color-purple-light: var(--purple-light);
 }
 
-html {
-  font-size: clamp(15px, 0.9rem + 0.2vw, 16.5px);
+/* Reset y defaults de elemento: van en @layer base para que participen del
+   mismo orden de capas que Tailwind (@layer theme, base, components,
+   utilities). Sin esto, este CSS "sin capa" le ganaría SIEMPRE a las
+   utilidades de Tailwind (aunque tengan más especificidad), porque el CSS
+   sin capa tiene prioridad incondicional sobre cualquier capa nombrada. */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    font-size: clamp(15px, 0.9rem + 0.2vw, 16.5px);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+      'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  h1 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    margin-bottom: 2px;
+  }
+
+  h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  p {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  button {
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  input, select {
+    font-family: inherit;
+  }
+
+  /* Accesibilidad: foco visible consistente en toda la app */
+  :focus-visible {
+    outline: 2px solid var(--accent-bright);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
-    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.25s ease, color 0.25s ease;
-}
+@layer components {
+  /* Texto con gradiente de marca — usar solo en títulos/palabras clave cortas */
+  .gradient-text {
+    background: var(--gradient-text);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
 
-#root {
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  }
 
-h1 {
-  font-size: 1.3rem;
-  font-weight: 800;
-  letter-spacing: -0.3px;
-  margin-bottom: 2px;
-}
+  body.dark .card {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.16);
+  }
 
-h2 {
-  font-size: 1rem;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
+  .btn {
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 38px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  }
 
-p {
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  margin: 0;
-}
+  .btn-primary {
+    background: var(--gradient-cta);
+    color: #fff;
+  }
 
-button {
-  font-family: inherit;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(255, 121, 0, 0.28);
+  }
 
-input, select {
-  font-family: inherit;
-}
+  .btn-secondary {
+    background: transparent;
+    border: 1.5px solid var(--accent-bright);
+    color: var(--accent);
+  }
 
-.hidden {
-  display: none !important;
-}
+  body.dark .btn-secondary {
+    color: var(--accent-bright);
+  }
 
-/* Texto con gradiente de marca — usar solo en títulos/palabras clave cortas */
-.gradient-text {
-  background: var(--gradient-text);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-}
+  .btn-secondary:hover {
+    background: var(--blue-light);
+    transform: translateY(-1px);
+  }
 
-/* Utility Classes */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: var(--shadow);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
+  body.dark .btn-secondary:hover {
+    background: rgba(0, 174, 239, 0.1);
+  }
 
-body.dark .card {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.16);
-}
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+  }
 
-.btn {
-  padding: 12px 22px;
-  border-radius: 999px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  min-height: 38px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
-}
+  /* Animación de entrada suave para pantallas/páginas */
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
-.btn-primary {
-  background: var(--gradient-cta);
-  color: #fff;
-}
-
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(255, 121, 0, 0.28);
-}
-
-.btn-secondary {
-  background: transparent;
-  border: 1.5px solid var(--accent-bright);
-  color: var(--accent);
-}
-
-body.dark .btn-secondary {
-  color: var(--accent-bright);
-}
-
-.btn-secondary:hover {
-  background: var(--blue-light);
-  transform: translateY(-1px);
-}
-
-body.dark .btn-secondary:hover {
-  background: rgba(0, 174, 239, 0.1);
-}
-
-.btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-/* Accesibilidad: foco visible consistente en toda la app */
-:focus-visible {
-  outline: 2px solid var(--accent-bright);
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* Animación de entrada suave para pantallas/páginas */
-@keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.page, .resultados-page, .roadmap-page, .modulo-select {
-  animation: fade-in-up 0.35s ease both;
 }
 
 @media (prefers-reduced-motion: reduce) {

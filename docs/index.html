@@ -8,8 +8,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <title>TIBOX — GRC Assessment</title>
-    <script type="module" crossorigin src="/grc_assessment/assets/index-CXQj-q_v.js"></script>
-    <link rel="stylesheet" crossorigin href="/grc_assessment/assets/index-CF4ypadA.css">
+    <script>
+      // Aplica el tema guardado sobre <html> antes del primer paint, para
+      // evitar el parpadeo claro->oscuro al cargar. Topbar.jsx sincroniza
+      // también <body> al montar (por compatibilidad con CSS existente).
+      try {
+        var tema = localStorage.getItem('tibox-theme');
+        var oscuro = tema === 'dark' || (!tema && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (oscuro) document.documentElement.classList.add('dark');
+      } catch (e) {}
+    </script>
+    <script type="module" crossorigin src="/grc_assessment/assets/index-vVcQlYml.js"></script>
+    <link rel="stylesheet" crossorigin href="/grc_assessment/assets/index-DK8qCb7i.css">
   </head>
   <body>
     <div id="root"></div>

@@ -56,6 +56,14 @@ CREATE TABLE dbo.Resultados (
     RespaldosScore              INT             NULL,
     MonitoreoScore              INT             NULL,
     ProveedoresScore            INT             NULL,
+    -- Cuestionario unificado Eje 1 (Ley 21.663 + Ley 21.719) — NULL para
+    -- evaluaciones de otros módulos (cyber/ti).
+    Ley663Score                 INT             NULL,
+    Ley719Score                 INT             NULL,
+    CumplimientoGlobal          INT             NULL,
+    Cumplimiento663              INT             NULL,
+    Cumplimiento719              INT             NULL,
+    BrechasGlobal                INT             NULL,
     AreaDebilUno                NVARCHAR(100)   NULL,
     AreaDebilDos                NVARCHAR(100)   NULL,
     AreaDebilTres               NVARCHAR(100)   NULL,

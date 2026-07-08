@@ -13,6 +13,12 @@ export const guardarResultadoQuery = `
       RespaldosScore = @respaldosScore,
       MonitoreoScore = @monitoreoScore,
       ProveedoresScore = @proveedoresScore,
+      Ley663Score = @ley663Score,
+      Ley719Score = @ley719Score,
+      CumplimientoGlobal = @cumplimientoGlobal,
+      Cumplimiento663 = @cumplimiento663,
+      Cumplimiento719 = @cumplimiento719,
+      BrechasGlobal = @brechasGlobal,
       AreaDebilUno = @areaDebilUno,
       AreaDebilDos = @areaDebilDos,
       AreaDebilTres = @areaDebilTres,
@@ -21,10 +27,12 @@ export const guardarResultadoQuery = `
   WHEN NOT MATCHED THEN
     INSERT (EvaluacionId, PuntajeGlobal, Nivel, InventarioScore, AccesoIdentidadScore,
             DatosPersonalesScore, SeguridadPerimetralScore, RespaldosScore, MonitoreoScore,
-            ProveedoresScore, AreaDebilUno, AreaDebilDos, AreaDebilTres, ResumenEjecutivo)
+            ProveedoresScore, Ley663Score, Ley719Score, CumplimientoGlobal, Cumplimiento663,
+            Cumplimiento719, BrechasGlobal, AreaDebilUno, AreaDebilDos, AreaDebilTres, ResumenEjecutivo)
     VALUES (@evaluacionId, @puntajeGlobal, @nivel, @inventarioScore, @accesoIdentidadScore,
             @datosPersonalesScore, @seguridadPerimetralScore, @respaldosScore, @monitoreoScore,
-            @proveedoresScore, @areaDebilUno, @areaDebilDos, @areaDebilTres, @resumenEjecutivo);
+            @proveedoresScore, @ley663Score, @ley719Score, @cumplimientoGlobal, @cumplimiento663,
+            @cumplimiento719, @brechasGlobal, @areaDebilUno, @areaDebilDos, @areaDebilTres, @resumenEjecutivo);
 
   SELECT * FROM dbo.Resultados WHERE EvaluacionId = @evaluacionId;
 `;

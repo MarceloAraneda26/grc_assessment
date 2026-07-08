@@ -1,6 +1,7 @@
 import { useContext, useEffect } from 'react';
 import { EvaluacionProvider, EvaluacionContext } from './context/EvaluacionContext';
 import { useUrlSync } from './hooks/useUrlSync';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Topbar } from './components/Topbar';
 import { ModuloSelect } from './components/ModuloSelect';
 import { PerfilForm } from './components/PerfilForm';
@@ -41,7 +42,9 @@ function AppContent() {
 function App() {
   return (
     <EvaluacionProvider>
-      <AppContent />
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
     </EvaluacionProvider>
   );
 }

@@ -1,6 +1,6 @@
 import { getDatosResultados, getDatosRoadmap } from './reporte-data.js';
 
-const MODULO_LABELS = { cyber: 'Ciberseguridad', ley: 'Protección de Datos', ti: 'Levantamiento TI' };
+const MODULO_LABELS = { cyber: 'Ciberseguridad', ley: 'Gobierno y Cumplimiento', ti: 'Levantamiento TI' };
 
 const ESTILO_TITULO = { font: { bold: true, size: 14 } };
 const ESTILO_SUBTITULO = { font: { bold: true, size: 11 } };

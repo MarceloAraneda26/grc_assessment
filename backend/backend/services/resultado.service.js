@@ -22,6 +22,15 @@ export const guardarResultadoEvaluacion = async (pool, evaluacionId, datos) => {
     const monitoreoScore = datos.detalles?.['Monitoreo']?.score || null;
     const proveedoresScore = datos.detalles?.['Proveedores']?.score || null;
 
+    // Cuestionario unificado Eje 1 (Ley 21.663 + 21.719) — solo presentes
+    // cuando la evaluación es del módulo "ley"; NULL para cyber/ti.
+    const ley663Score = datos.scoresPorLey?.find(s => s.ley === '21.663')?.promedio ?? null;
+    const ley719Score = datos.scoresPorLey?.find(s => s.ley === '21.719')?.promedio ?? null;
+    const cumplimientoGlobal = datos.cumplimientoGlobal ?? null;
+    const cumplimiento663 = datos.scoresPorLey?.find(s => s.ley === '21.663')?.cumplimiento ?? null;
+    const cumplimiento719 = datos.scoresPorLey?.find(s => s.ley === '21.719')?.cumplimiento ?? null;
+    const brechasGlobal = datos.brechas ?? null;
+
     const areaDebilUno = datos.areasParaMejorar?.[0]?.nombre || '';
     const areaDebilDos = datos.areasParaMejorar?.[1]?.nombre || '';
     const areaDebilTres = datos.areasParaMejorar?.[2]?.nombre || '';
@@ -37,6 +46,12 @@ export const guardarResultadoEvaluacion = async (pool, evaluacionId, datos) => {
       .replace(/@respaldosScore/g, respaldosScore !== null ? respaldosScore : 'NULL')
       .replace(/@monitoreoScore/g, monitoreoScore !== null ? monitoreoScore : 'NULL')
       .replace(/@proveedoresScore/g, proveedoresScore !== null ? proveedoresScore : 'NULL')
+      .replace(/@ley663Score/g, ley663Score !== null ? ley663Score : 'NULL')
+      .replace(/@ley719Score/g, ley719Score !== null ? ley719Score : 'NULL')
+      .replace(/@cumplimientoGlobal/g, cumplimientoGlobal !== null ? cumplimientoGlobal : 'NULL')
+      .replace(/@cumplimiento663/g, cumplimiento663 !== null ? cumplimiento663 : 'NULL')
+      .replace(/@cumplimiento719/g, cumplimiento719 !== null ? cumplimiento719 : 'NULL')
+      .replace(/@brechasGlobal/g, brechasGlobal !== null ? brechasGlobal : 'NULL')
       .replace(/@areaDebilUno/g, areaDebilUno ? `N'${areaDebilUno.replace(/'/g, "''")}'` : 'NULL')
       .replace(/@areaDebilDos/g, areaDebilDos ? `N'${areaDebilDos.replace(/'/g, "''")}'` : 'NULL')
       .replace(/@areaDebilTres/g, areaDebilTres ? `N'${areaDebilTres.replace(/'/g, "''")}'` : 'NULL')
