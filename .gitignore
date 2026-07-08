@@ -14,6 +14,7 @@ yarn-error.log*
 *.swo
 .cache/
 .eslintcache
+*.xlsx
 package-lock.json
 yarn.lock
 pnpm-lock.yaml

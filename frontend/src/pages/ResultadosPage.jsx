@@ -1,7 +1,6 @@
 import { useContext, useState, useMemo, useEffect } from 'react';
 import { EvaluacionContext } from '../context/EvaluacionContext';
-import { PREGUNTAS_TI, DOMINIOS_TI } from '../data/ti-questions';
-import { calcularMadurezTI, calcularDetallesMaturezTI, getNivelMadurezTI, getAreasParaMejorar } from '../utils/ti-scoring';
+import { getDatosResultados } from '../utils/reporte-data';
 import { guardarResultado } from '../services/api';
 import '../styles/ResultadosPage.css';
 
@@ -12,62 +11,15 @@ export const ResultadosPage = () => {
 
   const isTI = evaluacion.modulo === 'ti';
 
-  // Datos según el módulo
-  const { allQuestions, dominios, promedio, nivel, drillDominio, drillPreguntas } = useMemo(() => {
-    if (isTI) {
-      const madurez = calcularMadurezTI(evaluacion.respuestas);
-      const detalles = calcularDetallesMaturezTI(evaluacion.respuestas);
-      const nivelTI = getNivelMadurezTI(madurez);
+  const { titulo, promedio, nivel, dominios } = useMemo(
+    () => getDatosResultados(evaluacion),
+    [evaluacion.modulo, evaluacion.respuestas]
+  );
 
-      const domsArray = DOMINIOS_TI.map(d => d.nombre);
-      const selected = selectedDominio || (domsArray.length > 0 ? domsArray[0] : null);
-      const drillQs = PREGUNTAS_TI.filter(q => q.dominio === selected);
+  const drillDominio = selectedDominio || (dominios.length > 0 ? dominios[0].nombre : null);
+  const drillPreguntas = dominios.find(d => d.nombre === drillDominio)?.preguntas || [];
 
-      return {
-        allQuestions: PREGUNTAS_TI,
-        dominios: domsArray,
-        promedio: madurez,
-        nivel: nivelTI,
-        detalles,
-        drillDominio: selected,
-        drillPreguntas: drillQs
-      };
-    } else {
-      // Para cyber y ley: cálculo simple basado en niveles 0-3
-      const allQs = [
-        { id: 'q1', texto: '¿Tiene política de seguridad documentada?', dominio: 'Gobernanza' },
-        { id: 'q2', texto: '¿Realiza evaluaciones de riesgo regularmente?', dominio: 'Gobernanza' },
-        { id: 'q3', texto: '¿Cuenta con un equipo de seguridad dedicado?', dominio: 'Gobernanza' },
-        { id: 'q4', texto: '¿Implementa control de acceso basado en roles?', dominio: 'Acceso' },
-        { id: 'q5', texto: '¿Utiliza autenticación multifactor?', dominio: 'Acceso' },
-      ];
-
-      const respuestas = Object.values(evaluacion.respuestas);
-      const prom = respuestas.length === 0 ? 0 : Math.round((respuestas.reduce((a, b) => a + b, 0) / respuestas.length / 3) * 100);
-
-      const getNivelCyber = (porcentaje) => {
-        if (porcentaje < 25) return { label: 'Crítico', color: '#EF4444', dot: '#EF4444' };
-        if (porcentaje < 50) return { label: 'En Riesgo', color: '#F59E0B', dot: '#F59E0B' };
-        if (porcentaje < 75) return { label: 'Satisfactorio', color: '#0BA5EC', dot: '#0BA5EC' };
-        return { label: 'Optimizado', color: '#10B981', dot: '#10B981' };
-      };
-
-      const domsArray = [...new Set(allQs.map(q => q.dominio))];
-      const selected = selectedDominio || (domsArray.length > 0 ? domsArray[0] : null);
-      const drillQs = allQs.filter(q => q.dominio === selected);
-
-      return {
-        allQuestions: allQs,
-        dominios: domsArray,
-        promedio: prom,
-        nivel: getNivelCyber(prom),
-        drillDominio: selected,
-        drillPreguntas: drillQs
-      };
-    }
-  }, [evaluacion.modulo, evaluacion.respuestas, selectedDominio, isTI]);
-
-  // Guardar resultados en BD cuando se carga la página
+  // Guardar resultados en BD cuando se carga la página (los 3 módulos)
   useEffect(() => {
     const guardarEnBD = async () => {
       if (!evaluacion.id || guardandoResultado) return;
@@ -75,23 +27,25 @@ export const ResultadosPage = () => {
       try {
         setGuardandoResultado(true);
 
-        if (isTI) {
-          const madurez = calcularMadurezTI(evaluacion.respuestas);
-          const detalles = calcularDetallesMaturezTI(evaluacion.respuestas);
-          const nivelObj = getNivelMadurezTI(madurez);
-          const areasDebiles = getAreasParaMejorar(detalles, 3);
+        const areasDebiles = [...dominios]
+          .sort((a, b) => a.puntuacion - b.puntuacion)
+          .slice(0, 3)
+          .map(d => ({ nombre: d.nombre, score: d.puntuacion }));
 
-          const datosResultado = {
-            puntajeGlobal: Math.round(madurez),
-            nivel: nivelObj.label,
-            detalles: detalles,
-            areasParaMejorar: areasDebiles,
-            resumenEjecutivo: `Evaluación TI: ${nivelObj.label} (${Math.round(madurez)}%). Áreas prioritarias: ${areasDebiles.map(a => a.nombre).join(', ')}.`
-          };
+        const detallesPorDominio = dominios.reduce((acc, d) => {
+          acc[d.nombre] = { score: d.puntuacion };
+          return acc;
+        }, {});
 
-          await guardarResultado(evaluacion.id, datosResultado);
-          console.log('Resultado TI guardado en BD');
-        }
+        const datosResultado = {
+          puntajeGlobal: Math.round(promedio),
+          nivel: nivel.label,
+          detalles: detallesPorDominio,
+          areasParaMejorar: areasDebiles,
+          resumenEjecutivo: `${titulo}: ${nivel.label} (${Math.round(promedio)}%). Áreas prioritarias: ${areasDebiles.map(a => a.nombre).join(', ')}.`
+        };
+
+        await guardarResultado(evaluacion.id, datosResultado);
       } catch (error) {
         console.error('Error guardando resultado en BD:', error);
       } finally {
@@ -100,37 +54,8 @@ export const ResultadosPage = () => {
     };
 
     guardarEnBD();
-  }, [evaluacion.id, isTI, evaluacion.respuestas]);
-
-  const calcularPorDominio = (dominio) => {
-    if (isTI) {
-      const preg = PREGUNTAS_TI.filter(q => q.dominio === dominio);
-      if (preg.length === 0) return 0;
-
-      // Calcular promedio de respuestas para este dominio
-      const scores = preg.map(p => {
-        const resp = evaluacion.respuestas[p.id] || 'No';
-        const esInversa = ['ti-id-3', 'ti-id-7', 'ti-mon-4'].includes(p.id);
-        if (esInversa) {
-          if (resp === 'Si') return 0;
-          if (resp === 'No') return 100;
-          if (resp === 'Parcial') return 50;
-          return 0;
-        } else {
-          if (resp === 'Si') return 100;
-          if (resp === 'No') return 0;
-          if (resp === 'Parcial') return 50;
-          return 0;
-        }
-      });
-      return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
-    } else {
-      const domsPregs = allQuestions.filter(q => q.dominio === dominio);
-      if (domsPregs.length === 0) return 0;
-      const suma = domsPregs.reduce((acc, q) => acc + (evaluacion.respuestas[q.id] || 0), 0);
-      return Math.round((suma / (domsPregs.length * 3)) * 100);
-    }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [evaluacion.id, evaluacion.respuestas]);
 
   const SVGGauge = ({ valor }) => {
     const radius = 70;
@@ -164,7 +89,7 @@ export const ResultadosPage = () => {
     <div className="resultados-page">
       <div className="resultados-header">
         <h1>Resultados de la Evaluación</h1>
-        <p>Análisis de {isTI ? 'Levantamiento TI' : evaluacion.modulo === 'ley' ? 'Protección de Datos (Ley 21.719)' : 'Ciberseguridad'}</p>
+        <p>Análisis de {titulo}</p>
       </div>
 
       <div className="resultado-gauge-card">
@@ -190,27 +115,24 @@ export const ResultadosPage = () => {
       </div>
 
       <div className="resultado-dominios">
-        {dominios.map(dom => {
-          const puntuacion = calcularPorDominio(dom);
-          return (
-            <button
-              key={dom}
-              className={`dominio-card ${selectedDominio === dom ? 'active' : ''}`}
-              onClick={() => setSelectedDominio(dom)}
-            >
-              <div className="dominio-card-header">
-                <div className="dominio-card-name">{dom}</div>
-                <div className="dominio-card-score">{puntuacion}%</div>
-              </div>
-              <div className="dominio-card-bar">
-                <div className="dominio-card-fill" style={{ width: `${puntuacion}%` }} />
-              </div>
-              <div className="dominio-card-status">
-                {puntuacion < 50 ? 'Mejorar' : puntuacion < 75 ? 'Avanzar' : 'Optimizar'}
-              </div>
-            </button>
-          );
-        })}
+        {dominios.map(dom => (
+          <button
+            key={dom.nombre}
+            className={`dominio-card ${selectedDominio === dom.nombre ? 'active' : ''}`}
+            onClick={() => setSelectedDominio(dom.nombre)}
+          >
+            <div className="dominio-card-header">
+              <div className="dominio-card-name">{dom.nombre}</div>
+              <div className="dominio-card-score">{dom.puntuacion}%</div>
+            </div>
+            <div className="dominio-card-bar">
+              <div className="dominio-card-fill" style={{ width: `${dom.puntuacion}%` }} />
+            </div>
+            <div className="dominio-card-status">
+              {dom.puntuacion < 50 ? 'Mejorar' : dom.puntuacion < 75 ? 'Avanzar' : 'Optimizar'}
+            </div>
+          </button>
+        ))}
       </div>
 
       {drillDominio && (
@@ -219,25 +141,12 @@ export const ResultadosPage = () => {
             <div className="resultado-drill-title">Detalle: {drillDominio}</div>
           </div>
           <div className="drill-items">
-            {drillPreguntas.map(q => {
-              const respuesta = evaluacion.respuestas[q.id] || 'Sin respuesta';
-              const labelMap = {
-                'Si': 'Sí',
-                'No': 'No',
-                'Parcial': 'Parcial',
-                'Desconoce': 'Desconoce',
-                0: 'No Impl.',
-                1: 'Inicial',
-                2: 'Avanzado',
-                3: 'Optimizado'
-              };
-              return (
-                <div key={q.id} className="drill-item">
-                  <div className="drill-item-txt">{q.texto}</div>
-                  <div className={`drill-item-lvl l-${respuesta}`}>{labelMap[respuesta] || respuesta}</div>
-                </div>
-              );
-            })}
+            {drillPreguntas.map((q, idx) => (
+              <div key={idx} className="drill-item">
+                <div className="drill-item-txt">{q.texto}</div>
+                <div className={`drill-item-lvl l-${q.valorCrudo ?? 'Sin respuesta'}`}>{q.respuesta}</div>
+              </div>
+            ))}
           </div>
         </div>
       )}

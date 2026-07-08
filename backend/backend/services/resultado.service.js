@@ -43,6 +43,11 @@ export const guardarResultadoEvaluacion = async (pool, evaluacionId, datos) => {
       .replace(/@resumenEjecutivo/g, datos.resumenEjecutivo ? `'${datos.resumenEjecutivo.replace(/'/g, "''")}'` : 'NULL');
 
     const result = await pool.request().query(query);
+
+    // Llegar a Resultados implica que el cuestionario se completó: se marca
+    // la evaluación para que el Historial la muestre como terminada.
+    await pool.request().query(`UPDATE Evaluaciones SET Completada = 1 WHERE Id = ${parseInt(evaluacionId, 10)}`);
+
     return result.recordset[0];
   } catch (error) {
     console.error('Error guardando resultado:', error);

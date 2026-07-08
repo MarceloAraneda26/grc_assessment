@@ -1,89 +1,26 @@
 import { useContext, useMemo } from 'react';
 import { EvaluacionContext } from '../context/EvaluacionContext';
-import { calcularDetallesMaturezTI, calcularMadurezTI } from '../utils/ti-scoring';
-import { generarTareasRoadmap, generarResumenEjecutivo, ENTREGABLES_TI } from '../utils/ti-roadmap';
+import { getDatosRoadmap } from '../utils/reporte-data';
 import '../styles/RoadmapPage.css';
 
 export const RoadmapPage = () => {
-  const { evaluacion, reiniciar } = useContext(EvaluacionContext);
+  const { evaluacion, reiniciar, irAFase } = useContext(EvaluacionContext);
 
   const isTI = evaluacion.modulo === 'ti';
 
-  // Datos según el módulo
-  const { titulo, subtitulo, tareas, hitos, resumen, entregables, fases } = useMemo(() => {
-    if (isTI) {
-      const madurez = calcularMadurezTI(evaluacion.respuestas);
-      const detalles = calcularDetallesMaturezTI(evaluacion.respuestas);
-      const tareasRoadmap = generarTareasRoadmap(detalles);
+  const { titulo, subtitulo, tareas: tareasCompletas, hitos, resumen, entregables, fases } = useMemo(
+    () => getDatosRoadmap(evaluacion),
+    [evaluacion.modulo, evaluacion.respuestas]
+  );
 
-      // Calcular meses de inicio/fin basados en tareas generadas
-      const tareasConMeses = tareasRoadmap.map((t, idx) => ({
-        ...t,
-        id: idx,
-        mes_inicio: t.mes,
-        mes_fin: t.mes + (t.duracion || 2)
-      }));
-
-      return {
-        titulo: 'Roadmap de Mejora TI',
-        subtitulo: 'Plan de mejora de infraestructura y seguridad para los próximos 12 meses',
-        tareas: tareasConMeses.slice(0, 8), // Top 8 tareas
-        hitos: [
-          { num: '3', label: 'Meses', desc: 'Inventario y acceso consolidado' },
-          { num: '6', label: 'Meses', desc: 'Respaldos y seguridad perimetral' },
-          { num: '12', label: 'Meses', desc: 'Monitoreo y mejora continua' },
-        ],
-        resumen: generarResumenEjecutivo(madurez, detalles),
-        entregables: [
-          ...ENTREGABLES_TI['Fase 1 (Meses 1-3)'],
-          ...ENTREGABLES_TI['Fase 2 (Meses 4-6)'],
-          ...ENTREGABLES_TI['Fase 3 (Meses 7-12)']
-        ],
-        fases: ENTREGABLES_TI
-      };
-    } else {
-      // Para cyber y ley
-      const tareasBase = [
-        { id: 1, titulo: 'Política de Seguridad', mes_inicio: 1, mes_fin: 3, prioridad: 1 },
-        { id: 2, titulo: 'Capacitación personal', mes_inicio: 2, mes_fin: 3, prioridad: 1 },
-        { id: 3, titulo: 'Auditoría inicial', mes_inicio: 2, mes_fin: 4, prioridad: 2 },
-        { id: 4, titulo: 'Implementar MFA', mes_inicio: 4, mes_fin: 6, prioridad: 1 },
-        { id: 5, titulo: 'Monitoreo 24/7', mes_inicio: 7, mes_fin: 12, prioridad: 2 },
-      ];
-
-      const hitos = [
-        { num: '3', label: 'Meses', desc: 'Fase inicial de gobernanza y capacitación' },
-        { num: '6', label: 'Meses', desc: 'Control de acceso y autenticación implementado' },
-        { num: '12', label: 'Meses', desc: 'Madurez operativa y monitoreo continuo' },
-      ];
-
-      const resumenCyber = 'Basado en la evaluación realizada, se propone un plan de mejora de madurez distribuido en tres fases estratégicas: (1) Gobernanza y Sensibilización (meses 1–3), enfocado en establecer políticas y capacitación; (2) Controles de Acceso e Identidad (meses 4–6), implementando autenticación multifactor y gestión de accesos; (3) Operacionalización y Monitoreo (meses 7–12), estableciendo procesos de monitoreo continuo y mejora permanente.';
-
-      const entregablesBase = [
-        'Política de Seguridad de la Información documentada',
-        'Plan de Capacitación y Sensibilización aprobado',
-        'Matriz de Riesgos actualizada y validada',
-        'Arquitectura MFA implementada y operativa',
-        'Centro de Monitoreo 24/7 en funcionamiento',
-        'Informe de cumplimiento normativo periódico',
-      ];
-
-      return {
-        titulo: 'Roadmap de Implementación',
-        subtitulo: `Plan de mejora de madurez para los próximos 12 meses — ${evaluacion.modulo === 'ley' ? 'Protección de Datos' : 'Ciberseguridad'}`,
-        tareas: tareasBase,
-        hitos,
-        resumen: resumenCyber,
-        entregables: entregablesBase,
-        fases: {}
-      };
-    }
-  }, [evaluacion.modulo, evaluacion.respuestas, isTI]);
+  // Para TI, se muestran solo las 8 tareas prioritarias en el Gantt (el
+  // resto del detalle igual queda disponible en entregables/fases).
+  const tareas = isTI ? tareasCompletas.slice(0, 8) : tareasCompletas;
 
   const renderTaskBar = (tarea) => {
     const bars = [];
     for (let i = 1; i <= 12; i++) {
-      const isActive = i >= tarea.mes_inicio && i <= tarea.mes_fin;
+      const isActive = i >= tarea.mesInicio && i <= tarea.mesFin;
       const prioridadClass = tarea.prioridad ? `p${tarea.prioridad}` : '';
       bars.push(
         <div

@@ -1,10 +1,11 @@
 import { useContext, useState } from 'react';
 import { EvaluacionContext } from '../context/EvaluacionContext';
 import { crearEvaluacion, buscarEvaluacionesPorRazonSocial, obtenerEvaluacion, verificarRazonSocial } from '../services/api';
+import { evaluacionEstaCompleta } from '../utils/evaluacion-helpers';
 import '../styles/PerfilForm.css';
 
 export const PerfilForm = () => {
-  const { evaluacion, guardarPerfil, guardarEvaluacionId, irAFase } = useContext(EvaluacionContext);
+  const { evaluacion, guardarPerfil, guardarEvaluacionId, cargarEvaluacionCompleta, irAFase } = useContext(EvaluacionContext);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showHistorial, setShowHistorial] = useState(false);
@@ -62,6 +63,8 @@ export const PerfilForm = () => {
     return '';
   };
 
+  const MODULO_LABELS = { cyber: 'Ciberseguridad', ley: 'Protección de Datos', ti: 'Levantamiento TI' };
+
   const handleVerificarRazonSocial = async (razonSocial) => {
     if (!razonSocial?.trim()) {
       setRazonSocialExiste(false);
@@ -104,16 +107,13 @@ export const PerfilForm = () => {
     setLoading(true);
     try {
       const response = await obtenerEvaluacion(evalId);
-      guardarEvaluacionId(response.id);
-      guardarPerfil(response.perfil);
-
-      // Cargar respuestas anteriores
-      const respuestas = response.respuestas;
-      Object.entries(respuestas).forEach(([preguntaId, nivel]) => {
-        // Aquí podrías cargar las respuestas en el contexto si es necesario
+      cargarEvaluacionCompleta({
+        id: response.id,
+        modulo: response.modulo,
+        perfil: response.perfil,
+        respuestas: response.respuestas,
+        completada: evaluacionEstaCompleta(response.modulo, response.respuestas, response.completada),
       });
-
-      irAFase(2);
     } catch (err) {
       setError('Error al reanudar evaluación: ' + err.message);
     } finally {
@@ -320,7 +320,7 @@ export const PerfilForm = () => {
                     }}
                   >
                     <div>
-                      <strong>{eval_.RazonSocial}</strong> ({eval_.Modulo})<br />
+                      <strong>{eval_.RazonSocial}</strong> ({MODULO_LABELS[eval_.Modulo] || eval_.Modulo})<br />
                       <small style={{ color: 'var(--text-muted)' }}>
                         {eval_.Completada ? '✅ Completada' : '⏳ Incompleta'} - {new Date(eval_.FechaActualizacion).toLocaleDateString()}
                       </small>

@@ -39,6 +39,30 @@ export const EvaluacionProvider = ({ children }) => {
     setEvaluacion(prev => ({ ...prev, id }));
   }, []);
 
+  // El backend siempre persiste el nivel como número (0-3); el módulo TI
+  // trabaja internamente con etiquetas de texto, así que hay que revertir
+  // el mapeo al retomar una evaluación de ese módulo.
+  const NIVEL_A_TEXTO_TI = { 3: 'Si', 2: 'Parcial', 1: 'No', 0: 'Desconoce' };
+
+  const cargarEvaluacionCompleta = useCallback(({ id, modulo, perfil, respuestas, completada }) => {
+    const respuestasNormalizadas = { ...(respuestas || {}) };
+    if (modulo === 'ti') {
+      Object.keys(respuestasNormalizadas).forEach((preguntaId) => {
+        const nivel = respuestasNormalizadas[preguntaId];
+        respuestasNormalizadas[preguntaId] = NIVEL_A_TEXTO_TI[nivel] ?? nivel;
+      });
+    }
+
+    setEvaluacion(prev => ({
+      ...prev,
+      id,
+      modulo,
+      perfil: perfil || prev.perfil,
+      respuestas: respuestasNormalizadas,
+      fase: completada ? 3 : 2,
+    }));
+  }, []);
+
   const guardarRespuesta = useCallback((preguntaId, nivel) => {
     setEvaluacion(prev => ({
       ...prev,
@@ -83,6 +107,7 @@ export const EvaluacionProvider = ({ children }) => {
         iniciarEvaluacion,
         guardarPerfil,
         guardarEvaluacionId,
+        cargarEvaluacionCompleta,
         guardarRespuesta,
         irAFase,
         reiniciar,

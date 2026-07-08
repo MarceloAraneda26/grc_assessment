@@ -4,6 +4,11 @@ import { crearEvaluacion, obtenerEvaluacionPorId, obtenerEvaluaciones } from "..
 import { upsertRespuesta, obtenerRespuestasPorEvaluacion } from "../services/respuesta.service.js";
 import { guardarResultadoEvaluacion, obtenerResultadoEvaluacion, obtenerTodosResultados, obtenerEstadisticasResultados } from "../services/resultado.service.js";
 
+// La capa de conexión parsea el output de texto de sqlcmd, así que todos los
+// valores llegan como string (incluidos bits/números). Hay que normalizarlos
+// antes de exponerlos como JSON para que el frontend los compare correctamente.
+const esVerdadero = (valor) => valor === true || valor === 1 || valor === '1';
+
 const filaAPerfil = (row) => ({
   empresa: row.RazonSocial,
   industria: row.Industria,
@@ -53,13 +58,13 @@ export const obtenerEvaluacionController = async (req, res) => {
     }
     const respuestasRows = await obtenerRespuestasPorEvaluacion(pool, id);
     const respuestas = respuestasRows.reduce((acc, r) => {
-      acc[r.PreguntaId] = r.Nivel;
+      acc[r.PreguntaId] = parseInt(r.Nivel, 10);
       return acc;
     }, {});
     res.status(200).json({
-      id: row.Id,
+      id: parseInt(row.Id, 10),
       modulo: row.Modulo,
-      completada: row.Completada,
+      completada: esVerdadero(row.Completada),
       perfil: filaAPerfil(row),
       respuestas,
     });
@@ -73,9 +78,12 @@ export const listarEvaluacionesController = async (req, res) => {
   try {
     const pool = await getConnection();
     const evaluaciones = await obtenerEvaluaciones(pool);
+    const normalizadas = (evaluaciones || [])
+      .filter(e => e.Id && !isNaN(parseInt(e.Id, 10)))
+      .map(e => ({ ...e, Id: parseInt(e.Id, 10), Completada: esVerdadero(e.Completada) }));
     res.status(200).json({
-      evaluaciones: evaluaciones || [],
-      total: evaluaciones?.length || 0
+      evaluaciones: normalizadas,
+      total: normalizadas.length
     });
   } catch (error) {
     console.error("Error al listar evaluaciones:", error);
@@ -196,10 +204,13 @@ export const buscarEvaluacionesPorRazonSocialController = async (req, res) => {
       ORDER BY e.FechaActualizacion DESC`;
 
     const result = await pool.request().query(query);
+    const normalizadas = (result.recordset || [])
+      .filter(e => e.Id && !isNaN(parseInt(e.Id, 10)))
+      .map(e => ({ ...e, Id: parseInt(e.Id, 10), Completada: esVerdadero(e.Completada) }));
 
     res.status(200).json({
-      evaluaciones: result.recordset || [],
-      total: result.recordset?.length || 0
+      evaluaciones: normalizadas,
+      total: normalizadas.length
     });
   } catch (error) {
     console.error("Error al buscar evaluaciones:", error);

@@ -60,7 +60,10 @@ export const getConnection = async () => {
                   const dataLines = [];
                   for (const line of lines) {
                     const trimmed = line.trim();
-                    if (!trimmed || trimmed.match(/^(-|=)+$/) || trimmed.match(/rows affected/i)) continue;
+                    // La fila separadora de sqlcmd con -s "," se ve como
+                    // "-----,----,---" (guiones separados por comas), no solo
+                    // guiones puros, así que hay que aceptar también comas/espacios.
+                    if (!trimmed || trimmed.match(/^[-=,\s]+$/) || trimmed.match(/rows affected/i)) continue;
                     dataLines.push(trimmed);
                   }
 

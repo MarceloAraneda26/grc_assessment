@@ -1,4 +1,4 @@
-import { PREGUNTAS_TI, DOMINIOS_TI } from '../data/ti-questions';
+import { PREGUNTAS_TI, DOMINIOS_TI } from '../data/ti-questions.js';
 
 /**
  * Tareas de mejora por dominio TI

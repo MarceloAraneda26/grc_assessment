@@ -1,4 +1,4 @@
-import { PREGUNTAS_TI, DOMINIOS_TI } from '../data/ti-questions';
+import { PREGUNTAS_TI, DOMINIOS_TI } from '../data/ti-questions.js';
 
 /**
  * Calcula el score de una respuesta según su tipo

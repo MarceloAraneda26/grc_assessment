@@ -6,8 +6,6 @@ import '../styles/CuestionarioPage.css';
 
 export const CuestionarioPage = () => {
   const { evaluacion, guardarRespuesta: guardarRespuestaLocal, irAFase } = useContext(EvaluacionContext);
-  const [preguntaActual, setPreguntaActual] = useState(0);
-  const [saving, setSaving] = useState(false);
 
   // Cargar preguntas según el módulo
   const preguntas = useMemo(() => {
@@ -23,6 +21,14 @@ export const CuestionarioPage = () => {
       { id: 'q5', texto: '¿Utiliza autenticación multifactor?', dominio: 'Acceso' },
     ];
   }, [evaluacion.modulo]);
+
+  // Al retomar una evaluación con respuestas ya guardadas, arrancar en la
+  // primera pregunta sin responder en vez de siempre desde el principio.
+  const [preguntaActual, setPreguntaActual] = useState(() => {
+    const idx = preguntas.findIndex(p => evaluacion.respuestas[p.id] === undefined);
+    return idx === -1 ? 0 : idx;
+  });
+  const [saving, setSaving] = useState(false);
 
   const pregunta = preguntas[preguntaActual];
   const respuestaActual = evaluacion.respuestas[pregunta.id] || undefined;
@@ -174,6 +180,16 @@ export const CuestionarioPage = () => {
           <button type="button" onClick={() => irAFase(1)} className="btn btn-secondary">
             ← Perfil
           </button>
+          {preguntaActual > 0 && (
+            <button
+              type="button"
+              onClick={() => setPreguntaActual(preguntaActual - 1)}
+              className="btn btn-secondary"
+              disabled={saving}
+            >
+              ← Anterior
+            </button>
+          )}
           {preguntaActual === preguntas.length - 1 && (
             <button onClick={() => irAFase(3)} className="btn btn-primary">
               Ver Resultados →

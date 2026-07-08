@@ -160,6 +160,16 @@
   color: #F97316;
 }
 
+.step:not(.disabled):not(.active):hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.step.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .step-divider {
   color: var(--border);
   font-size: 0.7rem;
